@@ -1,0 +1,238 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{vietnam} % Hỗ trợ tiếng Việt
+\usepackage{geometry}      % Căn lề
+\usepackage{graphicx}      % Chèn ảnh
+\usepackage{hyperref}      % Tạo link liên kết
+\usepackage{listings}      % Hiển thị đoạn code
+\usepackage{xcolor}        % Màu sắc
+\usepackage{float}
+
+% Cấu hình lề trang
+\geometry{
+	a4paper,
+	total={170mm,257mm},
+	left=25mm,
+	top=25mm,
+	right=25mm,
+	bottom=25mm
+}
+
+% Cấu hình hiển thị code (Python/Bash)
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\small,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2,
+	frame=single % Khung viền quanh code
+}
+
+\lstset{style=mystyle}
+
+% --- THÔNG TIN ĐẦU FILE ---
+\title{
+	\textbf{\Large ĐỒ ÁN XỬ LÝ ẢNH: MÁY CHẤM TRẮC NGHIỆM OMR}
+}
+\author{Nhóm thực hiện: Nguyễn Thế Minh Nhật}
+\date{\today}
+
+\begin{document}
+	
+	\maketitle
+	\tableofcontents
+	\newpage
+	
+	% --- NỘI DUNG CHÍNH ---
+	
+	\section{Giới thiệu chung}
+	Dự án này là một ứng dụng minh họa khả năng của thư viện OpenCV và các kỹ thuật Xử lý ảnh số để tự động chấm điểm phiếu trả lời trắc nghiệm (Optical Mark Recognition - OMR). Hệ thống được thiết kế để hoạt động nhanh chóng, chính xác và hỗ trợ nhiều định dạng đầu vào.
+	
+	\subsection{Các tính năng chính}
+	\begin{itemize}
+		\item \textbf{Đa dạng định dạng đầu vào:} Xử lý tốt cả file scan PDF và các định dạng ảnh phổ biến (JPG, PNG).
+		\item \textbf{Tự động nhận diện và căn chỉnh:} Tự động phát hiện khung viền phiếu trả lời trong ảnh chụp và thực hiện biến đổi phối cảnh (Warp Perspective) để bẻ thẳng tờ giấy trước khi xử lý.
+		\item \textbf{Chấm điểm chính xác:} Hỗ trợ chấm điểm cho cấu trúc phiếu tiêu chuẩn (ví dụ: 20 câu, 4 lựa chọn A, B, C, D).
+		\item \textbf{Trực quan hóa kết quả:} Vẽ vòng tròn xanh lên các câu trả lời được hệ thống nhận diện và hiển thị kết quả trực tiếp trên ảnh.
+		\item \textbf{Báo cáo kết quả:} Xuất danh sách đáp án đã chọn ra màn hình console (hoặc file Excel trong phiên bản mở rộng).
+	\end{itemize}
+	
+	\section{Cấu trúc dự án}
+	Cây thư mục của dự án được tổ chức như sau:
+	
+	\begin{description}
+		\item[\texttt{main.py}:] File thực thi chính của chương trình. Chịu trách nhiệm điều phối luồng xử lý từ đọc ảnh đến xuất kết quả.
+		\item[\texttt{requirements.txt}:] Danh sách các thư viện Python cần thiết để chạy dự án.
+		\item[\texttt{src/}:] Thư mục chứa mã nguồn xử lý lõi (Core modules).
+		\begin{itemize}
+			\item \texttt{pre\_processing.py}: Các hàm tiền xử lý ảnh (làm mờ Gaussian, tách biên Canny, tìm contour...).
+			\item \texttt{utils.py}: Các hàm tiện ích (sắp xếp tọa độ, xoay thẳng ảnh warp perspective...).
+			\item \texttt{omr\_logic.py}: Logic chính để sinh lưới tọa độ, đếm pixel và chấm điểm.
+			\item \texttt{measure\_tool.py}: Công cụ tương tác hỗ trợ đo đạc và lấy tọa độ mỏ neo (anchors) cho một mẫu phiếu mới.
+		\end{itemize}
+		\item[\texttt{data/raw/}:] Thư mục chứa ảnh chụp hoặc file PDF phiếu trả lời đầu vào.
+	\end{description}
+	
+	\section{Cài đặt môi trường}
+	
+	\subsection{Yêu cầu hệ thống}
+	Để chạy được dự án, máy tính cần cài đặt:
+	\begin{enumerate}
+		\item \textbf{Python 3.x} (Khuyên dùng bản 3.8 trở lên).
+		\item \textbf{Poppler:} Phần mềm hỗ trợ thư viện \texttt{pdf2image} để đọc file PDF.
+		\begin{itemize}
+			\item Tải về và giải nén.
+			\item Thêm đường dẫn thư mục \texttt{bin} của Poppler vào biến môi trường (Environment Variable) của Windows.
+		\end{itemize}
+	\end{enumerate}
+	
+	\subsection{Cài đặt thư viện}
+	Mở terminal (CMD hoặc VS Code terminal) tại thư mục dự án và chạy lệnh sau:
+	
+	\begin{lstlisting}[language=bash]
+		pip install -r requirements.txt
+	\end{lstlisting}
+	
+	Các thư viện chính bao gồm: \texttt{opencv-python}, \texttt{numpy}, \texttt{pdf2image}, \texttt{matplotlib}, \texttt{pandas}.
+	
+	\section{Phương pháp thực hiện (Methodology)}
+	
+	Hệ thống chấm thi trắc nghiệm (OMR) được xây dựng dựa trên một quy trình xử lý ảnh tuần tự (Pipeline) gồm 4 giai đoạn chính, đảm bảo chuyển đổi dữ liệu thô từ ảnh chụp thành kết quả điểm số chính xác.
+	
+	\subsection{Sơ đồ tổng quát (High-Level Pipeline)}
+	Quy trình tổng thể của hệ thống được mô tả qua sơ đồ khối dưới đây:
+	
+	\begin{figure}[H]
+		\centering
+		% Thay 'images/pipeline.png' bằng tên file ảnh sơ đồ của bạn
+		\includegraphics[width=0.9\textwidth]{images/pipeline.png}
+		\fbox{\begin{minipage}{0.8\textwidth}
+				\centering
+				\vspace{1cm}
+				\textbf{[Vị trí chèn hình ảnh Sơ đồ khối Pipeline]} \\
+				\textit{(Input $\rightarrow$ Pre-processing $\rightarrow$ Geometric Correction $\rightarrow$ Feature Extraction $\rightarrow$ Scoring)}
+				\vspace{1cm}
+		\end{minipage}}
+		\caption{Sơ đồ quy trình xử lý của hệ thống OMR}
+		\label{fig:pipeline}
+	\end{figure}
+	
+	\subsection{Mô tả chi tiết từng giai đoạn}
+	
+	\subsubsection{Giai đoạn 1: Thu thập và Chuẩn hóa đầu vào}
+	Đây là bước đầu tiên nhằm đưa dữ liệu từ nhiều nguồn khác nhau về một định dạng thống nhất để xử lý.
+	
+	\begin{itemize}
+		\item \textbf{Tiếp nhận dữ liệu (Data Ingestion):} Hệ thống hỗ trợ hai loại đầu vào:
+		\begin{itemize}
+			\item \textit{Ảnh đơn:} Các định dạng phổ biến như \texttt{.jpg}, \texttt{.png} từ máy ảnh hoặc điện thoại.
+			\item \textit{Tệp tin PDF:} Sử dụng thư viện \texttt{pdf2image} để chuyển đổi (rasterize) từng trang tài liệu PDF thành ma trận điểm ảnh (Numpy array) để xử lý tuần tự.
+		\end{itemize}
+		
+		\item \textbf{Tiền xử lý (Preprocessing):}
+		\begin{itemize}
+			\item \textit{Resize:} Ảnh đầu vào được thay đổi kích thước (Resize) về chiều rộng chuẩn (ví dụ: 1000px) để giảm tải tính toán và chuẩn hóa tọa độ xử lý.
+			\item \textit{Grayscale Conversion:} Chuyển đổi không gian màu từ RGB sang ảnh xám (Grayscale), loại bỏ thông tin màu sắc không cần thiết.
+			\item \textit{Gaussian Blur:} Áp dụng bộ lọc Gauss (kernel $5 \times 5$) để làm mịn ảnh, giảm nhiễu hạt (noise) tần số cao, giúp tăng độ chính xác cho bước phát hiện biên.
+		\end{itemize}
+	\end{itemize}
+	
+	\subsubsection{Giai đoạn 2: Định vị và Biến đổi hình học}
+	Mục tiêu của giai đoạn này là trích xuất vùng phiếu trả lời và loại bỏ các biến dạng hình học do góc chụp nghiêng.
+	
+	\begin{itemize}
+		\item \textbf{Phát hiện biên (Edge Detection):} Sử dụng thuật toán \textbf{Canny} với ngưỡng (threshold) thích hợp để phát hiện các cạnh trong ảnh.
+		
+		\item \textbf{Tìm vùng bài thi (ROI Localization):}
+		\begin{itemize}
+			\item Sử dụng thuật toán tìm đường bao (\texttt{findContours}) để xác định các đối tượng khép kín.
+			\item Lọc và chọn contour có diện tích lớn nhất và có 4 đỉnh (xấp xỉ đa giác bằng \texttt{approxPolyDP}). Đây được giả định là khung viền của tờ phiếu thi.
+		\end{itemize}
+		
+		\item \textbf{Biến đổi phối cảnh (Perspective Transform):}
+		\begin{itemize}
+			\item Xác định toạ độ 4 góc của tờ phiếu trong ảnh gốc.
+			\item Sử dụng ma trận biến đổi phối cảnh (\textbf{Warp Perspective}) để ánh xạ vùng ảnh phiếu thi về một hình chữ nhật phẳng (Top-down view), loại bỏ hoàn toàn biến dạng phối cảnh.
+		\end{itemize}
+	\end{itemize}
+	
+	\subsubsection{Giai đoạn 3: Trích xuất và Phân tích đặc trưng}
+	Giai đoạn này tập trung vào việc xác định vị trí các ô trả lời và trạng thái tô của chúng.
+	
+	\begin{itemize}
+		\item \textbf{Nhị phân hóa (Binarization):} Áp dụng phân ngưỡng thích nghi (\textbf{Adaptive Thresholding}) hoặc Otsu để tách biệt nét bút chì/mực (Foreground) ra khỏi nền giấy (Background). Ảnh kết quả là ảnh nhị phân (Đen/Trắng).
+		
+		\item \textbf{Xác định vùng đáp án (Zone Segmentation):}
+		\begin{itemize}
+			\item Dựa trên cấu trúc mẫu phiếu, ảnh được chia cắt thành các vùng cột câu hỏi.
+			\item Sử dụng phương pháp \textbf{Template Grid Mapping}: Áp dụng lưới tọa độ định sẵn (được sinh ra từ các điểm mỏ neo) để xác định vị trí tâm của từng ô tròn trắc nghiệm (A, B, C, D).
+		\end{itemize}
+		
+		\item \textbf{Đếm điểm ảnh (Pixel Counting):} Tại mỗi vị trí ô tròn, hệ thống sử dụng mặt nạ (Mask) để đếm số lượng điểm ảnh trắng (Non-zero pixels). Đây là chỉ số quan trọng để xác định ô đó có được tô hay không.
+	\end{itemize}
+	
+	\subsubsection{Giai đoạn 4: Ra quyết định và Kết xuất}
+	\begin{itemize}
+		\item \textbf{Logic chọn đáp án (Scoring Logic):}
+		\begin{itemize}
+			\item So sánh số lượng pixel của các ô trong cùng một câu hỏi.
+			\item Ô có số pixel lớn nhất và vượt qua ngưỡng nhiễu (Noise Threshold) được xác định là đáp án người dùng chọn.
+		\end{itemize}
+		
+		\item \textbf{Chấm điểm và Báo cáo:}
+		\begin{itemize}
+			\item So khớp đáp án người dùng với bộ đáp án chuẩn (Answer Key) để tính điểm.
+			\item \textbf{Trực quan hóa:} Vẽ vòng tròn màu xanh (Đúng) hoặc đỏ (Sai) lên ảnh bài thi để người dùng dễ dàng kiểm tra.
+			\item \textbf{Xuất dữ liệu:} Kết quả chấm được lưu trữ và xuất ra định dạng Excel (\texttt{.xlsx}) phục vụ công tác quản lý.
+		\end{itemize}
+	\end{itemize}
+	
+	\section{Hướng dẫn sử dụng}
+	
+	\subsection{Bước 1: Chuẩn bị dữ liệu}
+	Đặt file ảnh chụp (`.jpg`, `.png`) hoặc file scan (`.pdf`) của phiếu trả lời vào thư mục:
+	\begin{verbatim}
+		data/raw/
+	\end{verbatim}
+	
+	\subsection{Bước 2: Cấu hình đường dẫn}
+	Mở file \texttt{main.py} và cập nhật biến \texttt{IMAGE\_PATH} trỏ đến tên file bạn vừa chép vào.
+	
+	\begin{lstlisting}[language=Python]
+		IMAGE_PATH = "data/raw/OMR_Sample.pdf"
+	\end{lstlisting}
+	
+	\subsection{Bước 3: Chạy chương trình}
+	Thực thi lệnh sau trong terminal:
+	
+	\begin{lstlisting}[language=bash]
+		python main.py
+	\end{lstlisting}
+	
+	Chương trình sẽ tiến hành xử lý, hiển thị các cửa sổ gồm ảnh gốc, ảnh đã cắt, và kết quả chấm điểm. Kết quả chi tiết cũng sẽ được in ra màn hình console.
+	
+	\section{Hạn chế và Hướng phát triển}
+    
+    \subsection{Hạn chế hiện tại}
+    Mặc dù hệ thống hoạt động ổn định trên các mẫu thử nghiệm, nhưng vẫn tồn tại một số hạn chế:
+    \begin{itemize}
+        \item \textbf{Độ nhạy sáng:} Kết quả nhị phân hóa (Thresholding) có thể bị ảnh hưởng nếu ảnh chụp có bóng đổ quá lớn hoặc ánh sáng không đều.
+        \item \textbf{Cấu trúc cố định:} Hiện tại logic chấm điểm đang được cấu hình cứng cho mẫu phiếu 20 câu. Việc thay đổi sang mẫu 50 hay 100 câu cần can thiệp vào code (file \texttt{main.py}).
+        \item \textbf{Xử lý đơn trang:} Hệ thống chưa hỗ trợ tự động tách và xử lý hàng loạt trang trong một file PDF nhiều trang.
+    \end{itemize}
+\end{document}
