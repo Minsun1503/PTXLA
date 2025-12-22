@@ -93,13 +93,44 @@ def scale_contour(contour, scale):
         scale_x, scale_y = scale, scale
     else:
         scale_x, scale_y = scale
-    
+
     # Create a copy of the contour to avoid modifying the original
     scaled_contour = contour.copy().astype(np.float32)
-    
+
     # Apply the scaling factors to the x and y coordinates
     scaled_contour[:, :, 0] *= scale_x
     scaled_contour[:, :, 1] *= scale_y
-    
+
     # Convert the coordinates back to integers
     return scaled_contour.astype(np.int32)
+
+
+def get_outside_of_contour(image, contour):
+    """
+    Extracts the area outside the given contour from an image.
+
+    This function creates a mask from the contour, inverts it, and then applies
+    it to the original image to black out the area inside the contour,
+    effectively isolating the part of the image outside of it.
+
+    Args:
+        image (numpy.ndarray): The source image.
+        contour (numpy.ndarray): The contour defining the 'inside' area.
+
+    Returns:
+        numpy.ndarray: An image containing only the area outside the contour.
+    """
+    # Create a black mask with the same dimensions as the image
+    mask = np.zeros(image.shape[:2], dtype=np.uint8)
+
+    # Draw the filled contour on the mask in white
+    cv2.drawContours(mask, [contour], -1, (255), -1)
+
+    # Invert the mask, so the area outside the contour is white and inside is black
+    mask_inv = cv2.bitwise_not(mask)
+
+    # Apply the inverted mask to the original image
+    # This keeps the pixels where the mask is white (outside) and blacks out the rest
+    outside_image = cv2.bitwise_and(image, image, mask=mask_inv)
+
+    return outside_image

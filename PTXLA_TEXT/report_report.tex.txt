@@ -1,0 +1,244 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{vietnam} % H\"o tr\"o ti`ng Vi\"et
+\usepackage{geometry}      % C\"an l\"e
+\usepackage{graphicx}      % Ch\"en \"anh
+\usepackage{hyperref}      % T\"ao link li\"en k\"et
+\usepackage{listings}      % Hi\"en th\"i \"o\"an code
+\usepackage{xcolor}        % M\"au s\"ac
+\usepackage{float}
+
+% C\"au h\"inh l\"e trang
+\geometry{
+	a4paper,
+	total={170mm,257mm},
+	left=25mm,
+	top=25mm,
+	right=25mm,
+	bottom=25mm
+}
+
+% C\"au h\"inh hi\"en th\"i code (Python/Bash)
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\small,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2,
+	frame=single % Khung vi`en quanh code
+}
+
+\lstset{style=mystyle}
+
+% --- TH\"ONG TIN \"e\"eU FILE ---
+\title{
+	\textbf{\Large \"e\"o \"a\"n X\"u \"ely \"anh: H\"e th\"ong Ch\"am \"i\"em Tr\"ac Nghi\"em V\"a Nh\"an D\"ang V\"an B\"an T\"u \"ong (OMR \& OCR)
+}
+\author{Nh\"om th\"uc hi\"en: Nguy\"en Th\"e Minh Nh\"at}
+\date{\today}
+
+\begin{document}
+	
+	\maketitle
+	\tableofcontents
+	\newpage
+	
+	% --- N\"oi DUNG CH\"inh ---
+	
+	\section{Gi\"o thi\"eu chung}
+	Trong b\"oi c\"anh chuy\"en \"oi s\"o gi\"ao d\"uc, vi\"ec t\"u \"ong h\"oa c\"ac quy tr\"inh th\"u c\"ong nh\"u ch\"am thi v\"a qu\"an l\"y th\"ong tin th\"i sinh ng\"ay c\"ang tr\"o n\"en c\"ap thi\"et. \"e\"o \"an n\"ay tr\"inh b\"ay gi\"ai ph\"ap x\"ay d\"ung m\"ot h\"e th\"ong x\"u l\"y \"anh th\"ong minh, t\"ich h\"op hai ch\"uc n\"ang ch\"inh:
+		\begin{enumerate}
+			\item \textbf{Ch\"am \"i\"em tr\"ac nghi\"em t\"u \"ong (Optical Mark Recognition - OMR):} Nh\"an d\"ang v\"a ch\"am \"i\"em c\"ac c\"au tr\"a l\"oi tr\"en phi\"eu tr\"ac nghi\"em.
+			\item \textbf{Nh\"an d\"ang v\"an b\"an t\"u \"ong (Optical Character Recognition - OCR):} T\"u \"ong ph\"at hi\"en v\"a tr\"ich xu\"at th\"ong tin v\"an b\"an (nh\"u T\"en, MSSV, M\"a \"e) t\"u c\"ac v\"ung b\"en ngo\"ai phi\"eu tr\"a l\"oi.
+		\end{enumerate}
+	H\"e th\"ong \"o\"o \"o\"o thi\"et k\"e \"o\"o t\"oi \"u \"u hi\"u, gi\"am thi\"u sai s\"ot c\"ua con ng\"o\"o\"i v\"a cung c\"ap k\"et qu\"a m\"ot c\"ach nhanh ch\"ong, tr\"uc quan.
+	
+	\subsection{C\"ac t\"inh n\"ang ch\"inh}
+		\begin{itemize}
+			\item \textbf{X\"u l\"y t\"u file PDF:} H\"e th\"ong c\"o kh\"a n\"ang \"o\"c v\"a x\"u l\"y tr\"uc ti\"ap file PDF ch\"ua \"anh scan c\"ua phi\"eu l\"am b\"ai.
+			\item \textbf{T\"u \"ong \"o\"o v\"i tr\"i v\"a c\"an ch\"inh phi\"eu:} T\"u \"ong t\"im ki\"em khung vi`en c\"ua phi\"eu trong \"anh v\"a \"ap d\"ung bi\"en \"oi h\"inh h\"oc \"o\"o l\"am ph\"ang, lo\"ai b\"o bii"n d\"ang ph\"oi c\"anh.
+			\item \textbf{Thi\"et l\"ap b\"an t\"u \"ong th\"ong minh:}
+			    \begin{itemize}
+			        \item \textit{OMR:} Cung c\"ap c\"ong c\"u t\"oong t\"ac \"o\"o ng\"o\"o\"i d\"ung ch\"i c\"an ch\"on 2 \"i\"em neo (g\"oc tr\"en-tr\"ai v\"a d\"o\"i-ph\"ai) cho kh\"oi tr\"ac nghi\"em trong l\"an \"au ti\"en.
+			        \item \textit{OCR:} Ho\"an to\"an t\"u \"ong ph\"at hi\"en c\"ac v\"ung ch\"ua v\"an b\"an (t\"en, m\"a s\"o...) n\"am b\"en ngo\"ai kh\"oi tr\"ac nghi\"em m\"a kh\"ong c\"an s\"u can thi\"ep c\"ua ng\"o\"o\"i d\"ung.
+			    \end{itemize}
+			\item \textbf{Ch\"am \"i\"em OMR ch\"inh x\"ac:} Ch\"am \"i\"em v\"a so s\"anh v\"o\"i \"ap \"an, \"ua ra \"i\"em s\"o cu\"oi c\"ung.
+			\item \textbf{Tr\"ich xu\"at th\"ong tin OCR:} S\"u d\"ung model EasyOCR \"o\"o nh\"an d\"ang v\"a tr\"ich xu\"at n\"oi dung v\"an b\"an t\"u c\"ac v\"ung \"a \"o \"o\"o \"o\"o \"o\"o ph\"at hi\"en.
+			\item \textbf{Tr\"uc quan h\"oa v\"a l\"u tr\"u k\"et qu\"a:} Hi\"en th\"i k\"et qu\"a ch\"am (\"o\"ong/sai) tr\"uc ti\"ap tr\"en \"anh, t\"ao \"anh b\"ao c\"ao \"i\"em v\"a l\"u to\"an b\"o k\"et qu\"a (\"anh, d\"o\"o li\"eu OCR) v\"ao th\"u m\"uc \"o\"o ra.
+		\end{itemize}
+    
+    \subsection{C\"ac c\"ong ngh\"e s\"u d\"ung}
+    \begin{itemize}
+        \item \textbf{Python 3:} Ng\"on ng\"u l\"ap tr\"inh ch\"inh c\"ua d\"u \"an.
+        \item \textbf{OpenCV (Open Source Computer Vision Library):} Th\"u vi\"en m\"a ngu\"on m\"o \"o\"o h\"ang \"o\"o cho c\"ac t\"ac v\"u x\"u l\"y \"anh, \"o\"o \"o\"o s\"u d\"ung cho h\"au h\"et c\"ac c\"ong \"o\"o\"an t\"u \"o\"o \"anh, bi\"en \"oi h\"inh h\"oc, \"o\"o \"en ph\"at hi\"en \"o\"o t\"oong.
+        \item \textbf{NumPy:} Th\"u vi\"en n\"en t\"`ang cho t\"inh to\"an khoa h\"oc trong Python, cung c\"ap c\"au tr\"uc m\"ang \"a chi`eu hi\"eu su\"at cao \"o\"o bi\"u di\"en v\"a t\"inh to\"an ma tr\"an \"i\"em \"anh.
+        \item \textbf{EasyOCR:} M\"ot th\"u vi\"en OCR m\"anh m\"e v\"a d\"e s\"u d\"ung, h\"o tr\"o nhi\"eu ng\"on ng\"u (bao g\"om ti`ng Vi\"et), \"o\"o \"o\"o \"o\"o s\"u d\"ung \"o\"o tr\"ich xu\"at v\"an b\"an.
+        \item \textbf{pdf2image:} Th\"u vi\"en ti\"en \"ich gi\"up chuy\"en \"oi c\"ac trang c\"ua file PDF th\`anh \"o\"o t\"oong \"anh m\`a OpenCV c\`o th\`e x\`u l\`y. N\`o ho\`at d\`ong nh\`u m\`ot l\`p v\`ỏ (wrapper) cho ti\`en \`ich Poppler.
+        \item \textbf{Poppler:} M\`ot th\`u vi\`en render PDF, l\`a ph\`u thu\`oc h\`e th\`ong b\`at bu\`oc c\`ua \` \texttt{pdf2image}.
+    \end{itemize}
+	
+	\section{C\"au tr\"uc d\"u \"an}
+	C\"ay th\"u m\"uc c\"ua d\"u \"an \"o\"o \"o\"o t\"o ch\"uc m\"ot c\`ach khoa h\`oc \`o\`o d\`e d\`ang qu\`an l\`y v\`a m\`o r\`ong:
+	
+	\begin{description}
+		\item[\texttt{main.py}:] File th\"uc thi ch\"inh, di`eu ph\"oi to\"an b\"o lu\"ong ho\"at \"ong c\"ua h\"e th\"ong.
+		\item[\texttt{requirements.txt}:] Danh s\"ach c\"ac th\"u vi\"en Python c\"an thi\"et.
+		\item[\texttt{src/}:] Th\"u m\"uc ch\"ua m\"a ngu\"on x\"u l\"y l\"oi.
+		\begin{itemize}
+			\item \texttt{config.py}: File c\"au h\"inh t\"ap trung, ch\"ua t\"at c\"a c\"ac \"o\"o\"o d\"an, ng\"o\"o\"ng v\"a tham s\"o quan tr\"ong.
+			\item \texttt{pre\_processing.py}: C\"ac h\"am ti\"en x\"u l\"y \"anh (chuy\"en \"oi PDF, t\"im v\"a b\"e th\"ang phi\"eu).
+			\item \texttt{omr\_logic.py}: Logic ch\"am \"i\"em tr\"ac nghi\"em (t\"ao l\"o\"i t\"oa \"o\"o, ph\"an t\"ich \"ot \"o\"o \"o\"o t\"o).
+			\item \texttt{ocr\_logic.py}: Logic tr\"ich xu\"at v\"an b\"an (s\"u d\"ung EasyOCR tr\"en c\"ac v\"ung \"anh \"o\"o v\"ao).
+			\item \texttt{measure\_tool.py}: C\"ong c\"u t\"oong t\"ac cho vi\"ec thi\"et l\"ap t\"oa \"o\"o l\"an \"au.
+            \item \texttt{utils.py}: C\"ac h\"am ti\"en \"ich chung (s\"ap x\"ep \"i\"em, bi\"en \"oi ph\"oi c\"anh, x\"u l\"y contour).
+            \item \texttt{ui.py}: C\"ac h\"am qu\"an l\"y giao di\"en ng\"o\"o\"i d\"ung (h\"op tho\"ai, hi\"en th\"i k\"et qu\"a).
+		\end{itemize}
+		\item[\texttt{data/}:] Ch\"ua d\"o\"o li\"eu \"o\"o v\"ao.
+		    \begin{itemize}
+		        \item \texttt{raw/}: Ch\"ua file PDF phi\"eu l\"am b\"ai.
+		        \item \texttt{answer/}: Ch\"ua file \"ap \"an cho ph\"an OMR.
+		        \item \texttt{template/}: Ch\"ua file t\"oa \"o\"o \"o\"o \"o\"o l\"u sau l\"an thi\"et l\"ap \"au ti\"en.
+		    \end{itemize}
+		\item[\texttt{output/}:] Th\"u m\"uc l\"u tr\"u t\"at c\"a c\"ac k\"et qu\"a \"o\"o ra (\"anh, file JSON).
+		\item[\texttt{poppler-25.11.0/}:] Th\"u vi\"en Poppler c\"an thi\"et cho vi\"ec x\"u l\"y PDF tr\"en Windows.
+	\end{description}
+	
+	\section{C\"ai \"at v\"a H\"o\"o\"ng s\"u d\"ung}
+	
+	
+	
+	\subsection{Y\"eu c\"au v\"e m\"oi tr\"o\"ong}
+	
+	\begin{enumerate}
+	
+		\item \textbf{Python:} Phi\"en b\"an 3.8 tr\"o l\"en.
+	
+		\item \textbf{Poppler:} Do h\"e th\"ong c\"an x\"u l\"y file PDF, Poppler l\`a m\`ot y\`eu c\`au b\`at bu\`oc.
+	
+		      \begin{itemize}
+	
+			      \item D\"u \"an \`a \"i k\`em th\`u m\`uc \` \texttt{poppler-25.11.0} cho Windows.
+	
+			      \item \textbf{Quan tr\"ong:} Ng\"o\"o\"i d\"ung c\"an th\"em \"o\"o\"o d\"an \"o\"o d\"ay \"o\"o t\"o\"i th\"u m\"uc \` \texttt{poppler-25.11.0/Library/bin} v\`ao bi\`en m\`oi tr\`o\`ng \` \texttt{Path} c\`ua h\`e th\`ong. N\`eu kh\`ong c\`o b\`o\`c n\`ay, ch\`o\`ng tr\`inh s\`e b\`ao l\`oi kh\`ong t\`im th\`ay Poppler.
+	
+		      \end{itemize}
+	
+	\end{enumerate}
+	
+	
+	
+	\subsection{C\"ai \"at c\"ac th\"u vi\"en Python}
+	
+	M\"o m\"ot c\"ua s\"o d\"ong l\"enh (terminal) trong th\"u m\"uc g\"oc c\"ua d\"u \"an v\`a ch\`ay l\`enh sau \`o\`o c\`ai \`at t\`at c\`a c\`ac th\`u vi\`en c\`an thi\`et:
+	
+	\begin{lstlisting}[language=bash]
+	
+	pip install -r requirements.txt
+	
+	\end{lstlisting}
+	
+	\textit{L\"u \` y: Trong l\`an ch\`ay \`au ti\`en, th\`u vi\`en \` \texttt{easyocr} c\`o th\`e s\`e t\`u \`ong t\`ai v\`e c\`ac model nh\`an d\`ang. \`ay l\`a qu\`a tr\`inh ch\`i di\`en ra m\`ot l\`an v\`a c\`an c\`o k\`et n\`oi Internet.}
+	
+	
+	
+	\subsection{C\"au h\"inh h\"e th\"ong}
+	
+	T\`at c\`a c\`ac c\`au h\`inh quan tr\`ong \`e\`u t\`ap trung t\`ai file \` \texttt{src/config.py}.
+	
+	\begin{itemize}
+	
+		\item \texttt{PDF\_PATH}: \"o\"o d\"an t\"o\"i file PDF phi\"eu l\"am b\"ai \"o\"o v\"ao.
+	
+		\item \texttt{ANSWER\_KEY\_PATH}: \"o\"o d\"an t\"o\"i file \` \texttt{.csv} ch\"ua \"ap \"an c\"ua ph\"an tr\"ac nghi\"em.
+	
+		\item \texttt{COORDINATES\_PATH}: \"o\"o d\"an \"o\"o l\"u file template t\"oa \"o\"o sau l\"an thi\"et l\"ap \"au ti\"en.
+	
+	\end{itemize}
+	
+	Ng\"o\"o\"i d\"ung c\"an \"o\"o\"o \"o\"o dam b\"ao c\`ac file d\`o\`o li\`eu (phi\`eu l\`am b\`ai, \`ap \`an) \`o\`o \`o\`o v\`i tr\`i v\`a c\`ac \"o\"o d\"an trong file config l\`a ch\`inh x\`ac.
+	
+	
+	
+	\subsection{H\"o\"o\"ng v\"an h\"anh}
+	
+	\begin{enumerate}
+	
+		\item \textbf{Ch\"ay ch\"o\"ong tr\"inh:}
+	
+		      \begin{lstlisting}[language=bash]
+	
+	python main.py
+	
+	\end{lstlisting}
+	
+		\item \textbf{Thi\"et l\"ap l\"an \"au (First-Time Setup):}
+	
+		      N\`eu h\`e th\`ong kh\`ong t\`im th\`ay file t\`oa \`o\`o template, m\`ot h\`op tho\`ai s\`e hi\`en l\`en h\`oi quy\`en \`o\`o b\`at \`o\`u qu\`a tr\`inh thi\`et l\`ap.
+	
+		      \begin{itemize}
+	
+			      \item \textbf{Giai \"o\"an 1 (Th\"u c\"ong):} M\`ot c\`ua s\`o hi\`en th\`i \"anh phi\`eu s\`e m\`o ra. Ng\`o\`o\`i d\`ung c\`an click chu\`ot v\`ao 2 v\`i tr\`i theo h\`o\`ong d\`an tr\`en console: t\`am c\`ua \`ot d\`ap \`an \textbf{\`au ti\`en b\`en tr\`ai} v\`a t\`am c\`ua \` \textbf{d\`o\`i c\`ung b\`en ph\`ai} c\`ua kh\`oi tr\`ac nghi\`em.
+	
+			      \item \textbf{Giai \"o\"an 2 (T\"u \"ong):} Ngay sau khi 2 \"i\"em \"o\"o \"o\"o ch\"on, c\`ua s\`o s\`e \`o\`ng l\`ai. H\`e th\`ong s\`e t\`u \`ong ch\`ay n\`en \`o\`o t\`im c\`ac v\`ung v\`an b\`an OCR.
+	
+			      \item To\`an b\`o t\`oa \`o\`o sau \`o\`o \`o\`o l\`u v\`ao file \` \texttt{coordinates.json}.
+	
+		      \end{itemize}
+	
+		\item \textbf{C\"ac l\"an ch\"ay sau:}
+	
+		      Ch\`o\`ng tr\`inh s\`e t\`u \`ong \`o\`c file \` \texttt{coordinates.json} \`a l\`u v\`a th\`uc hi\`en to\`an b\`o quy tr\`inh ch\`am \`i\`em, nh\`an d\`ang m\`a kh\`ong c\`an b\`at k\`y t\`oong t\`ac n\`ao.
+	
+	\end{enumerate}
+	
+	
+	
+	
+	\section{K\"et qu\"a th\"uc nghi\"em}
+	
+	\subsection{D\"o\"o li\"eu \"o\"o v\"ao}
+	
+	H\"e th\"ong \"o\"o \"o\"o th\"u nghi\"em v\`o\`i file \` \texttt{Mau\_de\_thi\_co\_dap\_an.pdf}, l\`a m\`ot file scan phi\`eu tr\`a l\`oi tr\`ac nghi\`em c\`o k\`em c\`ac th\`ong tin c\`ua th\`i sinh.
+	
+	
+	
+	\subsection{K\"et qu\"a x\"u l\"y OMR}
+	
+	Sau khi x\"u l\"y, h\"e th\"ong t\"ao ra hai \"anh k\"et qu\"a cho ph\"an OMR:
+	
+	\begin{itemize}
+	
+		\item \texttt{scoring\_result.png}: \"Anh phi\"eu l\"am b\`ai v\`oi c\`ac \`ap \`an \`o\`o \`o\`o khoanh tr\`on. M\`au xanh cho \`ap \`an \`o\`o ng, m\`au \`o \`o cho \`ap \`an sai. N\`eu sai, m\`ot ch\`am xanh nh\`o s\`e \`o\`o \`o\`o \`o\`o \`ap \`an \`o\`o ng.
+	
+		\item \texttt{score.png}: M\`ot \"anh ri\`eng bi\`et hi\`en th\`i \`i\`em s\`o cu\`oi c\`ung v\`a t\`ong s\`o c\`au tr\`a l\`oi \`o\`o ng.
+	
+	\end{itemize}
+	
+	\textit{(Vi\` du v\`e c\`ac h\`inh \`anh k\`et qu\`a c\`o th\`e \`o\`o \`o\`o ch\`en v\`ao \`ay \`o\`o minh h\`oa)}
+	
+	
+	
+	\subsection{K\"et qu\"a x\"u l\"y OCR}
+	
+	\"o\`i v\`o\`i ph\`an OCR, k\`et qu\`a bao g\`om:
+	
+	\begin{itemize}
+	
+	    \item \texttt{outside\_area.png}: \`ay l\`a \"anh tr\`uc quan h\`oa v\`ung \`o\`o \`o\`o s\`u d\`ung cho vi\`ec nh\`an d\`ang OCR. N\`o l\`a \"anh g\`oc v\`o\`i ph\`an phi\`eu tr\`ac nghi\`em \`a \`o\`o \`o\`o t\`o \`en, ch\`i \`e l\`ai c\`ac v\`ung ch\`ua th\`ong tin v\`an b\`an.
+	
+		\item \texttt{ocr\_results.json}: File JSON ch\`ua k\`et qu\`a v\`an b\`an \`o\`o \`o\`o tr\`ich xu\`at. M\`oi v\`ung v\`an b\`an \`o\`o \`o\`o \`o\`o ph\`at hi\`en s\`e t\`oong \`o\`ng v\`o\`i m\`ot kh\`oa (vi\` du: \` \texttt{

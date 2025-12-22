@@ -1,142 +1,121 @@
-import cv2
-import numpy as np
 import os
+import json
+import sys
 
-from src import omr_logic
+# Import project modules
+from src import config
+from src import pre_processing
 from src import measure_tool
-
-# --- GENERAL CONFIGURATION ---
-PDF_PATH = "data/raw/OMR_Sample.pdf"
-OUTPUT_PATH = "output/"
-# Standard size of the sheet after warping, ALL COORDINATES ARE BASED ON THIS SIZE
-STANDARD_SIZE = (1000, 1400)
-
-ANSWER_KEY_PATH = "data/answer/answer_key.csv"
-# Get coordinates and the pre-warped image from the measure_tool
-# This allows the user to select the region of interest once
-ANSWER_BLOCK_ANCHORS, warped_image = measure_tool.get_coordinates_from_image(PDF_PATH)
+from src import omr_logic
+from src import ocr_logic
+from src import ui
 
 
-def main():
+def run_grading_process(answer_block_anchors, ocr_regions, warped_image, outside_image):
     """
-    Main function to run the OMR grading process.
-    """
-    # The entire process of reading and warping the image is already done in measure_tool
-    # Now, just check if there is an image to process
-    if warped_image is not None and len(ANSWER_BLOCK_ANCHORS) == 2:
-        print("--> Successfully retrieved image and coordinates.")
-        print(f"    - Anchor point coordinates: {ANSWER_BLOCK_ANCHORS}")
-        print(f"    - Image size: {warped_image.shape[:2]}")
+    Orchestrates the full grading process, including OMR and OCR.
 
-        # 3. Generate coordinate grid and grade the sheet
-        print("--> Generating coordinates for answer cells...")
-        # Generate coordinates for a block of 20 questions
+    Args:
+        answer_block_anchors (list): A list containing the two anchor coordinates.
+        ocr_regions (dict): A dictionary of named regions for OCR.
+        warped_image (numpy.ndarray): The processed, perspective-corrected image of the sheet.
+        outside_image (numpy.ndarray): The image containing the area outside the main document.
+    """
+    if warped_image is None:
+        print("--> LỖI: Không có ảnh để xử lý.")
+        return
+
+    # --- OMR Section ---
+    if answer_block_anchors:
+        print("--- Bắt đầu chấm điểm trắc nghiệm (OMR) ---")
+        # 1. Generate OMR coordinates
         answer_coords = omr_logic.generate_column_coordinates(
-            start_point=ANSWER_BLOCK_ANCHORS[0],
-            end_point=ANSWER_BLOCK_ANCHORS[1],
-            num_questions=20,
-            num_choices=4
+            start_point=answer_block_anchors[0],
+            end_point=answer_block_anchors[1],
+            num_questions=config.NUM_QUESTIONS_PER_COLUMN,
+            num_choices=config.NUM_CHOICES_PER_QUESTION
         )
-        # Wrap it in a list to be compatible with the grading function
         all_coords = [answer_coords]
 
-        # 3. Grade the sheet (Get student's answers)
-        print("-> Recognizing the submitted answers...")
-        student_answers, thresh_debug = omr_logic.grade_with_coordinates(warped_image, all_coords)
-
-        # --- NEW SECTION: CALCULATE SCORE ---
-        print("-> Grading with the answer key...")
-
-        # 1. Load the correct answers
-        correct_answers = omr_logic.load_answer_key(ANSWER_KEY_PATH)
+        # 2. Grade the bubbles
+        student_answers, _ = omr_logic.grade_with_coordinates(warped_image, all_coords)
+        correct_answers = omr_logic.load_answer_key(config.ANSWER_KEY_PATH)
 
         if not correct_answers:
-            print("Warning: Answer key file not found or is empty!")
-            final_score = 0
-            results = [False] * len(student_answers)
+            print("Cảnh báo: Không tìm thấy hoặc file đáp án trống!")
+            final_score, num_correct, results = 0, 0, [False] * len(student_answers)
         else:
-            # 2. Calculate the score
             final_score, num_correct, results = omr_logic.calculate_score(student_answers, correct_answers)
             print("\n==========================")
-            print(f"   RESULT: {final_score:.2f} / 10")
-            print(f"   Correct answers: {num_correct} / {len(correct_answers)}")
+            print(f"   KẾT QUẢ OMR: {final_score:.2f} / 10")
+            print(f"   Số câu đúng: {num_correct} / {len(correct_answers)}")
             print("==========================\n")
-
-        # 4. Display the results on the image (UPGRADED)
-        display_image = warped_image.copy()
-
-        # Initialize an index for answers
-        idx = 0
-        # Iterate through each column of answer coordinates
-        for col in all_coords:
-            # Iterate through each question in the column
-            for q_coords in col:
-                if idx >= len(student_answers):
-                    break  # Stop if we've processed all of the student's answers
-
-                student_choice = student_answers[idx]
-                is_correct = results[idx] if idx < len(results) else False
-
-                # Color: Green (Correct) / Red (Incorrect)
-                color = (0, 255, 0) if is_correct else (0, 0, 255)
-
-                if student_choice != -1:
-                    # Circle the student's chosen answer
-                    cx, cy = q_coords[student_choice]
-                    cv2.circle(display_image, (cx, cy), 15, color, 2)
-                else:
-                    # If the question is skipped, mark it with a red question mark
-                    cx, cy = q_coords[0]  # Position near the first choice
-                    cv2.putText(display_image, "?", (cx - 15, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-
-                # If the answer is incorrect, also show the correct answer (Optional)
-                if not is_correct and idx < len(correct_answers):
-                    correct_idx = correct_answers[idx]
-                    if correct_idx != -1:  # If the answer key has a valid answer
-                        # Get coordinates of the correct choice
-                        cx_corr, cy_corr = q_coords[correct_idx]
-                        # Draw a small green dot to indicate the correct answer
-                        cv2.circle(display_image, (cx_corr, cy_corr), 5, (0, 255, 0), -1)
-
-                idx += 1
-
-        # Display the result image (with circles)
-        cv2.imshow("Scoring Result", cv2.resize(display_image, (600, 800)))
-
-        # --- CREATE A NEW WINDOW JUST TO DISPLAY THE SCORE ---
-        # Create a white background image to display text
-        score_display = np.ones((300, 450, 3), dtype=np.uint8) * 255
-
-        # "RESULT" text
-        cv2.putText(score_display, "RESULT", (100, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 3)
-
-        # The score
-        cv2.putText(score_display, f"{final_score:.2f} / 10", (80, 150),
-                    cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 4)
-
-        # Number of correct answers
-        cv2.putText(score_display, f"Correct: {num_correct} / {len(correct_answers)}",
-                    (50, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-
-        # Display the score window
-        cv2.imshow("Score", score_display)
-        # --- END OF SCORE WINDOW SECTION ---
-
-        # save output Image and Result in /output
-        if not os.path.exists(OUTPUT_PATH):
-            os.makedirs(OUTPUT_PATH)
-
-        cv2.imwrite(os.path.join(OUTPUT_PATH, "scoring_result.png"), display_image)
-        cv2.imwrite(os.path.join(OUTPUT_PATH, "score.png"), score_display)
-        print(f"\n--> Saved results to {OUTPUT_PATH}")
-
-        cv2.waitKey(0)  # Wait for a key press to close the windows
-        cv2.destroyAllWindows()  # Close all OpenCV windows
+        
+        # 3. Draw OMR results on the image
+        result_image = ui.draw_results_on_image(warped_image, student_answers, correct_answers, results, all_coords)
+        score_image = ui.create_score_display(final_score, num_correct, len(correct_answers))
     else:
-        print("--> COULD NOT get coordinates or image. Please check the PDF file.")
+        print("--> Không có tọa độ trắc nghiệm, bỏ qua phần chấm OMR.")
+        result_image = warped_image.copy()
+        score_image = ui.create_score_display(0, 0, 0)
+
+    # --- OCR Section ---
+    # Perform OCR on the 'outside_image' since the ROIs are now selected from it.
+    ocr_data = ocr_logic.extract_text_from_regions(outside_image, ocr_regions)
+
+    # --- Finalization ---
+    # 5. Save all output files, now including the outside_image
+    ui.save_output_files(result_image, score_image, ocr_data, outside_image)
+
+    # 6. Show the results on screen
+    ui.show_final_results(result_image, score_image, ocr_data)
 
 
 if __name__ == "__main__":
-    # This block ensures the main function is called only when the script is executed directly
-    main()
+    """
+    Main entry point of the application.
+    Handles initial setup of coordinates/ROIs and then runs the grading process.
+    """
+    if not os.path.exists(config.OUTPUT_PATH):
+        os.makedirs(config.OUTPUT_PATH)
+
+    anchors = []
+    regions = {}
+    warped_img = None
+    outside_img = None  # Initialize outside_img
+
+    # Check if coordinates have been configured previously
+    if not os.path.exists(config.COORDINATES_PATH):
+        if ui.prompt_coordinate_setup():
+            # The tool now returns the outside_image as well
+            anchors, regions, warped_img, outside_img = measure_tool.get_coordinates_from_user_selection(
+                pdf_path=config.PDF_PATH,
+                coord_save_path=config.COORDINATES_PATH
+            )
+            if len(anchors) < 2:
+                print("Lỗi: Cần chọn đủ 2 tọa độ cho khối đáp án. Vui lòng chạy lại.")
+                sys.exit()
+        else:
+            print("Chương trình không thể tiếp tục nếu không có tọa độ. Đang thoát...")
+            sys.exit()
+    else:
+        print(f"--> Đã tìm thấy file tọa độ tại: {config.COORDINATES_PATH}")
+        try:
+            with open(config.COORDINATES_PATH, 'r') as f:
+                data = json.load(f)
+            anchors = data.get(config.KEY_BUBBLE_ANCHORS, [])
+            regions = data.get(config.KEY_OCR_REGIONS, {})
+            if not anchors:
+                raise ValueError(f"File tọa độ không hợp lệ: thiếu '{config.KEY_BUBBLE_ANCHORS}'.")
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"Lỗi đọc file tọa độ: {e}")
+            print(f"Vui lòng xóa file '{config.COORDINATES_PATH}' và chạy lại để thiết lập từ đầu.")
+            sys.exit()
+        
+        # Process the PDF to get both the warped image and the outside area
+        print("--> Đang tải và xử lý ảnh từ PDF...")
+        # The function now returns two images
+        warped_img, outside_img = pre_processing.get_warped_image_from_pdf(config.PDF_PATH, config.STANDARD_SIZE)
+
+    # With coordinates and images ready, run the main grading process
+    run_grading_process(anchors, regions, warped_img, outside_img)

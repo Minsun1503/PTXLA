@@ -1,0 +1,155 @@
+import cv2
+import json
+from src import pre_processing
+from src import config
+
+# --- Module-level variables for ROI selection ---
+drawing = False  # True if mouse is pressed
+ref_point = []  # Starting (x,y) coordinates of the rectangle
+ocr_regions = {}  # Dictionary to store named OCR regions
+display_clone = None  # A clone of the display image to draw on
+
+
+def anchor_point_callback(event, x, y, flags, param):
+    """Callback for Phase 1: Selecting two anchor points."""
+    data = param
+    if event == cv2.EVENT_LBUTTONDOWN and len(data['coords']) < 2:
+        real_x, real_y = int(x * data['scale']), int(y * data['scale'])
+        print(f"👉 Anchor point selected: ({real_x}, {real_y})")
+        data['coords'].append((real_x, real_y))
+        cv2.circle(data['img'], (x, y), 5, (0, 0, 255), -1)
+        cv2.putText(data['img'], str(len(data['coords'])), (x + 10, y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        cv2.imshow("Coordinate Tool", data['img'])
+
+
+def roi_selection_callback(event, x, y, flags, param):
+    """Callback for Phase 2: Drawing rectangular ROIs for OCR."""
+    global drawing, ref_point, ocr_regions, display_clone
+    data = param
+    scale = data['scale']
+
+    if event == cv2.EVENT_LBUTTONDOWN:
+        ref_point = [(x, y)]
+        drawing = True
+
+    elif event == cv2.EVENT_MOUSEMOVE:
+        if drawing:
+            # Draw a temporary rectangle on a clone of the image
+            temp_img = display_clone.copy()
+            cv2.rectangle(temp_img, ref_point[0], (x, y), (0, 255, 0), 2)
+            cv2.imshow("Coordinate Tool", temp_img)
+
+    elif event == cv2.EVENT_LBUTTONUP:
+        drawing = False
+        ref_point.append((x, y))
+        cv2.rectangle(display_clone, ref_point[0], ref_point[1], (0, 255, 0), 2)
+        cv2.imshow("Coordinate Tool", display_clone)
+
+        # Prompt user for a name for this new region IN THE CONSOLE
+        region_name = input("Enter a name for this OCR region (e.g., 'student_name'): ").strip()
+        if region_name:
+            # Convert display coordinates back to real coordinates
+            x1, y1 = int(ref_point[0][0] * scale), int(ref_point[0][1] * scale)
+            x2, y2 = int(ref_point[1][0] * scale), int(ref_point[1][1] * scale)
+
+            # Ensure x1 < x2 and y1 < y2
+            real_x = min(x1, x2)
+            real_y = min(y1, y2)
+            real_w = abs(x1 - x2)
+            real_h = abs(y1 - y2)
+
+            ocr_regions[region_name] = [real_x, real_y, real_w, real_h]
+            print(f"  > Saved region '{region_name}' at [{real_x}, {real_y}, {real_w}, {real_h}]")
+            # Draw the name on the display image
+            cv2.putText(display_clone, region_name, (ref_point[0][0], ref_point[0][1] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+            cv2.imshow("Coordinate Tool", display_clone)
+        else:
+            print("  > No name entered. Region not saved.")
+
+
+def get_coordinates_and_rois(pdf_path, coord_save_path):
+    """
+    Opens an interactive window to select anchor points, then automatically detects
+    OCR regions from the rest of the page.
+
+    Returns:
+        tuple: (bubble_anchors, ocr_regions_dict, warped_image)
+    """
+    global ocr_regions, display_clone
+
+    # Reset regions dict for each run
+    ocr_regions = {}
+
+    # --- Step 1: Get the warped image and the outside area ---
+    # The function now returns the main warped page and the leftover parts.
+    warped_standard, outside_image = pre_processing.get_warped_image_from_pdf(pdf_path, config.STANDARD_SIZE)
+    if warped_standard is None or outside_image is None:
+        print("Failed to process the document from PDF.")
+        return [], {}, None
+
+    # --- Step 2: Setup the display window for anchor selection ---
+    display_scale = config.STANDARD_SIZE[1] / config.DISPLAY_HEIGHT
+    display_width = int(config.STANDARD_SIZE[0] / display_scale)
+    display_image = cv2.resize(warped_standard, (display_width, config.DISPLAY_HEIGHT))
+
+    # --- Phase 1: Select Anchor Points (Manual) ---
+    print("\n--- PHASE 1: ANCHOR POINTS ---")
+    print("Please click to select 2 anchor points for the bubble sheet area (e.g., bubble 1A and last bubble).")
+    cv2.imshow("Coordinate Tool", display_image)
+
+    captured_anchors = []
+    # Note: 'img' in callback_data is the display_image for drawing, not the outside_image
+    callback_data = {'img': display_image, 'scale': display_scale, 'coords': captured_anchors}
+    cv2.setMouseCallback("Coordinate Tool", anchor_point_callback, callback_data)
+
+    while len(captured_anchors) < 2:
+        cv2.waitKey(1)
+    
+    print("--> 2 anchor points selected. Now auto-detecting OCR regions.")
+    cv2.destroyAllWindows() # Close window after anchor selection
+
+    # --- Phase 2: Automatic OCR Region Detection ---
+    print("\n--- PHASE 2: AUTOMATIC OCR REGIONS ---")
+    # Process the 'outside_image' to find data areas
+    gray_outside = cv2.cvtColor(outside_image, cv2.COLOR_BGR2GRAY)
+    # Threshold to get a binary mask of all non-black areas.
+    # OTSU's method is great for finding a threshold in bimodal images (text vs background)
+    _, binary_mask = cv2.threshold(gray_outside, 10, 255, cv2.THRESH_BINARY)
+    
+    # Find contours of the data areas
+    contours, _ = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    if contours:
+        print(f"Found {len(contours)} potential OCR region(s).")
+        # Sort contours from top-to-bottom
+        contours = sorted(contours, key=lambda c: cv2.boundingRect(c)[1])
+        
+        for i, c in enumerate(contours):
+            # Filter out very small contours that might be noise
+            if cv2.contourArea(c) > 50:
+                x, y, w, h = cv2.boundingRect(c)
+                region_name = f"auto_roi_{i+1}"
+                # The coordinates are relative to the original image frame, which is correct
+                ocr_regions[region_name] = [x, y, w, h]
+                print(f"  > Saved region '{region_name}' at [{x}, {y}, {w}, {h}]")
+    else:
+        print("No automatic OCR regions were found.")
+
+    # --- Step 3: Save all collected data ---
+    if len(captured_anchors) >= 2:
+        final_data = {
+            "bubble_anchors": captured_anchors[:2],
+            "ocr_regions": ocr_regions
+        }
+        print(f"\n--> Saving coordinates to {coord_save_path}")
+        try:
+            with open(coord_save_path, 'w') as f:
+                json.dump(final_data, f, indent=4)
+        except Exception as e:
+            print(f"Error saving coordinates: {e}")
+            return [], {}, None
+
+    # Return the original warped image for consistency with downstream processing, and the new outside_image
+    return captured_anchors, ocr_regions, warped_standard, outside_image

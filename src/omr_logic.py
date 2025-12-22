@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import csv
+from src import config
+
 
 
 def generate_column_coordinates(start_point, end_point, num_questions=20, num_choices=4):
@@ -68,7 +70,6 @@ def grade_with_coordinates(warped_image, all_columns_coords):
     threshold_image = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
 
     student_answers = []
-    scan_radius = 12  # Radius of the circular area to scan for each bubble (tune as needed)
 
     # Iterate through each column of answers
     for column_coords in all_columns_coords:
@@ -80,7 +81,7 @@ def grade_with_coordinates(warped_image, all_columns_coords):
             for (cx, cy) in question_coords:
                 # Create a circular mask at the center of the bubble
                 mask = np.zeros(threshold_image.shape, dtype="uint8")
-                cv2.circle(mask, (cx, cy), scan_radius, 255, -1)
+                cv2.circle(mask, (cx, cy), config.SCAN_RADIUS, 255, -1)
 
                 # Count the number of white pixels (ink marks) within the mask
                 count = cv2.countNonZero(cv2.bitwise_and(threshold_image, threshold_image, mask=mask))
@@ -92,7 +93,7 @@ def grade_with_coordinates(warped_image, all_columns_coords):
 
             # Noise threshold: If the max pixel count is below a certain value,
             # consider it an empty/unmarked bubble.
-            if max_pixel_value > 150:
+            if max_pixel_value > config.PIXEL_THRESHOLD:
                 # The chosen answer is the one with the maximum pixel count
                 answer_index = pixel_counts.index(max_pixel_value)
                 student_answers.append(answer_index)  # 0=A, 1=B, 2=C, 3=D
@@ -114,7 +115,7 @@ def load_answer_key(csv_path):
     """
     answers = []
     # Map character answers to integer indices
-    mapper = {'A': 0, 'B': 1, 'C': 2, 'D': 3}
+    mapper = config.ANSWER_MAP
 
     try:
         with open(csv_path, mode='r', encoding='utf-8') as file:
@@ -158,21 +159,18 @@ def calculate_score(student_answers, correct_answers):
     if len(correct_answers) == 0:
         return 0, 0, [False]*len(student_answers)
 
-
     for i in range(num_questions_to_grade):
         if student_answers[i] == correct_answers[i]:
             correct_count += 1
             results.append(True)
         else:
             results.append(False)
-    
+
     # Pad results if student answered more questions than in the key
     while len(results) < len(student_answers):
         results.append(False)
-
 
     # Calculate score on a scale of 10
     score = (correct_count / len(correct_answers)) * 10
 
     return score, correct_count, results
-

@@ -1,0 +1,82 @@
+import cv2
+import easyocr
+import re
+from src import config
+
+# Initialize the OCR reader once.
+# This can take a moment, so it's best to do it at the module level if the script is run often.
+# We specify Vietnamese and English as the languages to look for.
+print("Initializing EasyOCR reader... (This may take a moment on first run)")
+reader = easyocr.Reader(config.OCR_LANGUAGES)
+print("EasyOCR reader initialized.")
+
+
+def preprocess_for_ocr(image):
+    """
+    Applies pre-processing steps to an image ROI to improve OCR accuracy.
+
+    Args:
+        image (numpy.ndarray): The cropped image region (ROI).
+
+    Returns:
+        numpy.ndarray: The pre-processed image.
+    """
+    # Convert to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # OPTIONAL: Apply other techniques like thresholding or resizing if needed
+    # For now, grayscale is a good first step.
+    # gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+
+    return gray
+
+
+def extract_text_from_regions(image, ocr_regions):
+    """
+    Extracts text from specified regions of an image using EasyOCR.
+
+    Args:
+        image (numpy.ndarray): The full, warped image.
+        ocr_regions (dict): A dictionary where keys are region names and values are
+                            [x, y, w, h] coordinates for the ROIs.
+
+    Returns:
+        dict: A dictionary where keys are the region names and values are the
+              extracted text as strings.
+    """
+    if not ocr_regions:
+        print("--> No OCR regions defined. Skipping text extraction.")
+        return {}
+
+    print("\n--> Starting OCR text extraction...")
+    extracted_data = {}
+
+    for region_name, coords in ocr_regions.items():
+        # 1. Crop the ROI from the main image
+        x, y, w, h = coords
+        roi = image[y:y+h, x:x+w]
+
+        if roi.size == 0:
+            print(f"  - Warning: Region '{region_name}' is empty. Skipping.")
+            continue
+
+        # 2. Pre-process the ROI for better OCR results
+        processed_roi = preprocess_for_ocr(roi)
+
+        # 3. Use EasyOCR to read text from the processed ROI
+        # The `detail=0` argument returns a list of simple strings.
+        ocr_result = reader.readtext(processed_roi, detail=0, paragraph=True)
+
+        # 4. Join the results into a single string and clean up
+        if ocr_result:
+            # Join detected text fragments with a space
+            full_text = ' '.join(ocr_result)
+            # Optional: Clean up extra spaces or unwanted characters
+            full_text = re.sub(r'\s+', ' ', full_text).strip()
+            extracted_data[region_name] = full_text
+            print(f"  - Region '{region_name}': Extracted text = '{full_text}'")
+        else:
+            extracted_data[region_name] = ""  # No text found
+            print(f"  - Region '{region_name}': No text found.")
+
+    return extracted_data

@@ -1,0 +1,166 @@
+import cv2
+import numpy as np
+import os
+import json
+import tkinter as tk
+from tkinter import messagebox
+from src import config
+
+
+def prompt_coordinate_setup():
+    """
+    Displays a dialog box asking the user if they want to set up coordinates.
+
+    Returns:
+        bool: True if the user clicks "Yes", False otherwise.
+    """
+    root = tk.Tk()
+    root.withdraw()  # Hide the main Tkinter window
+    response = messagebox.askyesno(
+        "Thiết lập lần đầu",
+        "Không tìm thấy file tọa độ.\nBạn có muốn thiết lập tọa độ các đáp án và vùng OCR bây giờ không?"
+    )
+    return response
+
+
+def draw_results_on_image(image, student_answers, correct_answers, results, all_coords):
+    """
+    Draws the grading results (circles, marks) on the provided image.
+
+    Args:
+        image (numpy.ndarray): The warped image to draw on.
+        student_answers (list): The list of student's answers (indices).
+        correct_answers (list): The list of correct answers from the key (indices).
+        results (list): A list of booleans indicating correctness for each question.
+        all_coords (list): A nested list of coordinates for all answer bubbles.
+
+    Returns:
+        numpy.ndarray: The image with the results drawn on it.
+    """
+    display_image = image.copy()
+    idx = 0
+
+    # Iterate through each column of answer coordinates
+    for col in all_coords:
+        # Iterate through each question in the column
+        for q_coords in col:
+            if idx >= len(student_answers):
+                break  # Stop if we've processed all of the student's answers
+
+            student_choice = student_answers[idx]
+            is_correct = results[idx] if idx < len(results) else False
+
+            # Color: Green for Correct, Red for Incorrect
+            color = (0, 255, 0) if is_correct else (0, 0, 255)
+
+            # --- Mark the student's choice ---
+            if student_choice != -1:
+                # Circle the student's chosen answer bubble
+                cx, cy = q_coords[student_choice]
+                cv2.circle(display_image, (cx, cy), config.SCAN_RADIUS + 3, color, 2)
+            else:
+                # If the question is skipped, mark it with a red question mark
+                # Position it near the 'A' choice for that question
+                cx, cy = q_coords[0]
+                cv2.putText(display_image, "?", (cx - 15, cy + 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+            # --- If incorrect, mark the correct answer ---
+            if not is_correct and idx < len(correct_answers):
+                correct_idx = correct_answers[idx]
+                if correct_idx != -1:  # If the answer key has a valid answer
+                    # Get coordinates of the correct choice
+                    cx_corr, cy_corr = q_coords[correct_idx]
+                    # Draw a small green dot to indicate the correct answer
+                    cv2.circle(display_image, (cx_corr, cy_corr), 5, (0, 255, 0), -1)
+
+            idx += 1
+
+    return display_image
+
+
+def create_score_display(final_score, num_correct, total_questions):
+    """
+    Creates a separate, new image window to display the final score.
+
+    Args:
+        final_score (float): The final score (e.g., out of 10).
+        num_correct (int): The number of correctly answered questions.
+        total_questions (int): The total number of questions in the answer key.
+
+    Returns:
+        numpy.ndarray: The image created to display the score.
+    """
+    # Create a white background image
+    score_display = np.ones((300, 450, 3), dtype=np.uint8) * 255
+
+    # "RESULT" text
+    cv2.putText(score_display, "RESULT", (100, 60),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 3)
+
+    # The score (e.g., "8.50 / 10")
+    cv2.putText(score_display, f"{final_score:.2f} / 10", (80, 150),
+                cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 4)
+
+    # Number of correct answers (e.g., "Correct: 17 / 20")
+    cv2.putText(score_display, f"Correct: {num_correct} / {total_questions}",
+                (50, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
+
+    return score_display
+
+
+def show_final_results(result_image, score_image, ocr_data):
+    """
+    Displays the final result images and prints OCR data to the console.
+
+    Args:
+        result_image (numpy.ndarray): The image with grading details drawn on it.
+        score_image (numpy.ndarray): The image showing the final score.
+        ocr_data (dict): Dictionary containing the extracted text from OCR.
+    """
+    # --- Print OCR Results to Console ---
+    if ocr_data:
+        print("\n--- OCR Extracted Information ---")
+        for key, value in ocr_data.items():
+            print(f"  - {key.replace('_', ' ').title()}: {value}")
+        print("---------------------------------")
+
+    print("\n--> Displaying results. Press any key to close all windows.")
+    # Display the main result image (with circles)
+    cv2.imshow("Scoring Result", cv2.resize(result_image, (600, 800)))
+    # Display the score window
+    cv2.imshow("Score", score_image)
+
+    cv2.waitKey(0)  # Wait for a key press to close the windows
+    cv2.destroyAllWindows()  # Close all OpenCV windows
+
+
+def save_output_files(result_image, score_image, ocr_data, outside_image=None):
+    """
+    Saves the result images and OCR data to the output directory.
+
+    Args:
+        result_image (numpy.ndarray): The image with grading details.
+        score_image (numpy.ndarray): The image with the final score.
+        ocr_data (dict): The extracted OCR data dictionary.
+        outside_image (numpy.ndarray, optional): The image of the area outside the document. Defaults to None.
+    """
+    if not os.path.exists(config.OUTPUT_PATH):
+        os.makedirs(config.OUTPUT_PATH)
+
+    # Save images
+    cv2.imwrite(os.path.join(config.OUTPUT_PATH, config.SCORING_RESULT_IMAGE_NAME), result_image)
+    cv2.imwrite(os.path.join(config.OUTPUT_PATH, config.SCORE_IMAGE_NAME), score_image)
+    
+    # Save the outside area image if it exists
+    if outside_image is not None:
+        cv2.imwrite(os.path.join(config.OUTPUT_PATH, config.OUTSIDE_AREA_IMAGE_NAME), outside_image)
+
+
+    # Save OCR data to a JSON file
+    if ocr_data:
+        ocr_save_path = os.path.join(config.OUTPUT_PATH, config.OCR_RESULT_JSON_NAME)
+        with open(ocr_save_path, 'w', encoding='utf-8') as f:
+            json.dump(ocr_data, f, ensure_ascii=False, indent=4)
+        print(f"--> Saved OCR results to {ocr_save_path}")
+
+    print(f"--> Saved result images to {config.OUTPUT_PATH}")

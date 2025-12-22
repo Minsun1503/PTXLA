@@ -1,154 +1,125 @@
 import cv2
+import json
 import numpy as np
-import time
-from src import utils, pre_processing
-from pdf2image import convert_from_path
+from src import pre_processing
+from src import config
 
-# --- Constants ---
-# The standard size for the warped image, for consistent coordinate systems.
-STANDARD_SIZE = (1000, 1400)
-# The height of the display window for the interactive coordinate selection.
-DISPLAY_HEIGHT = 700
-
-
-def mouse_click_callback(event, x, y, flags, param):
+def anchor_point_callback(event, x, y, flags, param):
     """
-    Callback function to handle mouse click events for coordinate selection.
-
-    Args:
-        event (int): The type of mouse event (e.g., cv2.EVENT_LBUTTONDOWN).
-        x (int): The x-coordinate of the mouse click in the display window.
-        y (int): The y-coordinate of the mouse click in the display window.
-        flags (int): Additional flags from OpenCV.
-        param (dict): A dictionary containing data passed to the callback,
-                      including the display image, scaling factor, and coordinate list.
+    Callback to capture up to two anchor points from a mouse click.
+    Draws a circle and number for each selected point.
     """
-    # The dictionary passed from setMouseCallback
     data = param
-
-    # If the left mouse button is clicked
-    if event == cv2.EVENT_LBUTTONDOWN:
-        # Scale the clicked (x, y) coordinates back to the original image size
-        real_x = int(x * data['scale'])
-        real_y = int(y * data['scale'])
-
-        print(f"👉 Point selected: ({real_x}, {real_y})")
-
-        # Append the real coordinates to the results list
+    max_points = data.get("max_points", 2)
+    
+    if event == cv2.EVENT_LBUTTONDOWN and len(data['coords']) < max_points:
+        # Convert display coordinates back to real image coordinates
+        real_x, real_y = int(x * data['scale']), int(y * data['scale'])
+        print(f"👉 Anchor point {len(data['coords']) + 1} selected: ({real_x}, {real_y})")
+        
+        # Store the real coordinates
         data['coords'].append((real_x, real_y))
-
-        # Draw a circle and number on the display image to give feedback to the user
+        
+        # Draw feedback on the display image
         cv2.circle(data['img'], (x, y), 5, (0, 0, 255), -1)
         cv2.putText(data['img'], str(len(data['coords'])), (x + 10, y),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        cv2.imshow(data["window_name"], data['img'])
 
-        # Refresh the display window to show the new point
-        cv2.imshow("Coordinate Selection", data['img'])
-
-
-def get_coordinates_from_image(pdf_path):
+def get_coordinates_from_user_selection(pdf_path, coord_save_path):
     """
-    Opens an interactive window to let the user click and select two anchor points.
+    Opens an interactive window to guide the user through a two-phase selection process:
+    1. Select 2 anchor points for the answer bubble area on the main warped document.
+    2. Select 2 anchor points for the OCR information area on the 'outside' image.
 
-    This function performs the following steps:
-    1. Converts the first page of a PDF to an image.
-    2. Pre-processes the image to find the document contour.
-    3. Warps and standardizes the document image.
-    4. Displays the image and waits for the user to select two points.
-    5. Automatically closes the window 3 seconds after two points are selected.
+    Saves the coordinates to a JSON file.
 
     Returns:
-        tuple: A tuple containing:
-            - list: The list of selected (x, y) coordinates.
-            - numpy.ndarray: The warped and standardized image.
+        tuple: (bubble_anchors, ocr_regions_dict, warped_image, outside_image)
     """
+    # --- Step 1: Get the warped image and the outside area from the PDF ---
+    warped_standard, outside_image = pre_processing.get_warped_image_from_pdf(pdf_path, config.STANDARD_SIZE)
+    if warped_standard is None or outside_image is None:
+        print("Failed to process the document from PDF.")
+        return [], {}, None, None
+
+    # --- Phase 1: Select Bubble Sheet Anchor Points on the Warped Image ---
+    p1_h, p1_w = warped_standard.shape[:2]
+    p1_display_scale = p1_w / config.DISPLAY_WIDTH # Scale width to 1200px for display
+    p1_display_w = config.DISPLAY_WIDTH
+    p1_display_h = int(p1_h / p1_display_scale)
+    
+    display_image_phase1 = cv2.resize(warped_standard, (p1_display_w, p1_display_h))
+    window_name_p1 = "Phase 1: Select Answer Area Anchors"
+    cv2.imshow(window_name_p1, display_image_phase1)
+    cv2.setWindowTitle(window_name_p1, "Phase 1: Select 2 anchors for the ANSWER BUBBLE area (e.g., top-left and bottom-right bubble)")
+    
+    captured_bubble_anchors = []
+    callback_data_p1 = {
+        'img': display_image_phase1,
+        'scale': p1_display_scale,
+        'coords': captured_bubble_anchors,
+        "window_name": window_name_p1
+    }
+    cv2.setMouseCallback(window_name_p1, anchor_point_callback, callback_data_p1)
+
+    print("\n--- PHASE 1: ANSWER AREA ANCHORS ---")
+    print("Please click to select 2 anchor points for the bubble sheet area (e.g., bubble 1A and the last bubble).")
+    while len(captured_bubble_anchors) < 2:
+        cv2.waitKey(1)
+    
+    print("--> Answer area anchors selected.")
+    cv2.destroyWindow(window_name_p1)
+
+    # --- Phase 2: Select OCR Information Area Anchors on the Outside Image ---
+    p2_h, p2_w = outside_image.shape[:2]
+    p2_display_scale = p2_w / config.DISPLAY_WIDTH # Scale width to 1200px for display
+    p2_display_w = config.DISPLAY_WIDTH
+    p2_display_h = int(p2_h / p2_display_scale)
+
+    display_image_phase2 = cv2.resize(outside_image, (p2_display_w, p2_display_h))
+    window_name_p2 = "Phase 2: Select Info Area Anchors"
+    cv2.imshow(window_name_p2, display_image_phase2)
+    cv2.setWindowTitle(window_name_p2, "Phase 2: Select 2 anchors on the OUTSIDE IMAGE for the info area (e.g., top-left and bottom-right)")
+    
+    captured_ocr_anchors = []
+    callback_data_p2 = {
+        'img': display_image_phase2,
+        'scale': p2_display_scale,
+        'coords': captured_ocr_anchors,
+        "window_name": window_name_p2
+    }
+    cv2.setMouseCallback(window_name_p2, anchor_point_callback, callback_data_p2)
+    
+    print("\n--- PHASE 2: OCR INFORMATION AREA (ON OUTSIDE IMAGE) ---")
+    print("Please click to select 2 anchor points to define the OCR region (top-left and bottom-right corners).")
+    while len(captured_ocr_anchors) < 2:
+        cv2.waitKey(1)
+        
+    print("--> OCR area anchors selected.")
+    cv2.destroyWindow(window_name_p2)
+
+    # --- Step 3: Process OCR anchors and Save Data ---
+    ocr_regions = {}
+    if len(captured_ocr_anchors) == 2:
+        p1, p2 = captured_ocr_anchors
+        x = min(p1[0], p2[0])
+        y = min(p1[1], p2[1])
+        w = abs(p1[0] - p2[0])
+        h = abs(p1[1] - p2[1])
+        ocr_regions[config.KEY_INFO_BLOCK] = [x, y, w, h]
+        print(f"  > Created OCR region '{config.KEY_INFO_BLOCK}' at [{x}, {y}, {w}, {h}]")
+
+    final_data = {
+        config.KEY_BUBBLE_ANCHORS: captured_bubble_anchors,
+        config.KEY_OCR_REGIONS: ocr_regions
+    }
+    print(f"\n--> Saving coordinates to {coord_save_path}")
     try:
-        # Convert PDF to a list of images
-        images = convert_from_path(pdf_path)
-        # Convert the first page (PIL image) to an OpenCV BGR image
-        original_image = cv2.cvtColor(np.array(images[0]), cv2.COLOR_RGB2BGR)
+        with open(coord_save_path, 'w') as f:
+            json.dump(final_data, f, indent=4)
     except Exception as e:
-        print(f"Error reading PDF: {e}")
-        return [], None
+        print(f"Error saving coordinates: {e}")
+        return [], {}, None, None
 
-    # --- IMAGE PRE-PROCESSING ---
-    h_orig, w_orig = original_image.shape[:2]
-    # Resize for faster processing
-    process_height = 800
-    process_width = int(process_height * w_orig / h_orig)
-    processing_image = cv2.resize(original_image, (process_width, process_height))
-
-    # Find edges and the document contour
-    edges = pre_processing.preprocess_image(processing_image)
-    doc_contour = pre_processing.find_document_contour(edges)
-
-    captured_coords = []
-    warped_standard = None  # Initialize to None
-
-    if doc_contour is not None:
-        # --- SCALING AND WARPING ---
-        # Calculate scaling factors to map contour points back to the original image size
-        scale_x = w_orig / process_width
-        scale_y = h_orig / process_height
-
-        # Scale the contour points
-        scaled_doc_contour = doc_contour.copy().astype(np.float32)
-        scaled_doc_contour[:, 0, 0] *= scale_x
-        scaled_doc_contour[:, 0, 1] *= scale_y
-
-        # Apply four-point perspective transform to get the top-down view of the document
-        warped_image = utils.four_point_transform(original_image, scaled_doc_contour.reshape(4, 2))
-        # Resize the warped image to a standard size for consistency
-        warped_standard = cv2.resize(warped_image, STANDARD_SIZE)
-
-        # --- SETUP INTERACTIVE DISPLAY ---
-        # Calculate scaling for the display window
-        display_scale = STANDARD_SIZE[1] / DISPLAY_HEIGHT
-        display_width = int(STANDARD_SIZE[0] / display_scale)
-        # Resize the standard warped image for display
-        display_image = cv2.resize(warped_standard, (display_width, DISPLAY_HEIGHT))
-
-        print("\n--- PLEASE CLICK TO SELECT 2 POINTS (e.g., bubble 1A and 20D) ---")
-
-        cv2.imshow("Coordinate Selection", display_image)
-
-        # Data to be passed to the mouse callback function
-        callback_data = {
-            'img': display_image,
-            'scale': display_scale,
-            'coords': captured_coords
-        }
-
-        # Set the mouse callback function for the window
-        cv2.setMouseCallback("Coordinate Selection", mouse_click_callback, callback_data)
-
-        # --- WAIT LOOP for user input ---
-        start_wait_time = None
-        while True:
-            # Refresh the display window (to show drawn points)
-            cv2.imshow("Coordinate Selection", display_image)
-            key = cv2.waitKey(100) & 0xFF  # Wait 100ms for a key press
-
-            # If two points have been selected
-            if len(captured_coords) >= 2:
-                if start_wait_time is None:
-                    print("--> 2 points selected. Closing automatically in 3 seconds...")
-                    start_wait_time = time.time()
-
-                # Check if 3 seconds have passed
-                if time.time() - start_wait_time >= 3:
-                    break
-
-            # Allow manual exit with 'q' or ESC key
-            if key == ord('q') or key == 27:
-                print("--> Manual exit.")
-                break
-
-        cv2.destroyAllWindows()
-    else:
-        print("Could not find the document frame.")
-        return [], None
-
-    # Return the captured coordinates and the standardized warped image
-    return captured_coords, warped_standard
-
+    return captured_bubble_anchors, ocr_regions, warped_standard, outside_image
