@@ -210,73 +210,43 @@
 	
 	
 	
-	\section{Kết quả thực nghiệm}
-	
-	\subsection{Dữ liệu đầu vào}
-	
-	Hệ thống được thử nghiệm với file \texttt{Mau\_de\_thi\_co\_dap\_an.pdf}, là một file scan phiếu trả lời trắc nghiệm có kèm các thông tin của thí sinh.
-	
-	
-	
-	\subsection{Kết quả xử lý OMR}
-	
-	Sau khi xử lý, hệ thống tạo ra hai ảnh kết quả cho phần OMR:
-	
-	\begin{itemize}
-	
-		\item \texttt{scoring\_result.png}: Ảnh phiếu làm bài với các đáp án được khoanh tròn. Màu xanh cho đáp án đúng, màu đỏ cho đáp án sai. Nếu sai, một chấm xanh nhỏ sẽ được đặt ở đáp án đúng.
-	
-		\item \texttt{score.png}: Một ảnh riêng biệt hiển thị điểm số cuối cùng và tổng số câu trả lời đúng.
-	
-	\end{itemize}
-	
-	\textit{(Ví dụ về các hình ảnh kết quả có thể được chèn vào đây để minh họa)}
-	
-	
-	
-	\subsection{Kết quả xử lý OCR}
-	
-	Đối với phần OCR, các kết quả bao gồm:
-	
-	\begin{itemize}
-	
-	    \item \texttt{outside\_area.png}: Đây là ảnh trực quan hóa vùng được sử dụng cho việc nhận dạng OCR. Nó là ảnh gốc với phần phiếu trắc nghiệm đã bị tô đen, chỉ để lại các vùng chứa thông tin văn bản.
-	
-		\item \texttt{ocr\_results.json}: File JSON chứa kết quả văn bản được trích xuất. Mỗi vùng văn bản được tự động phát hiện sẽ tương ứng với một khóa (ví dụ: \texttt{"auto\_roi\_1"}) và giá trị là chuỗi ký tự đọc được.
-	
-	\end{itemize}
-	
-	Ví dụ nội dung file \texttt{ocr\_results.json}:
-	
-	\begin{lstlisting}[language=json]
-	
-	{
-	
-	    "auto_roi_1": "Họ và tên: Nguyễn Văn A",
-	
-	    "auto_roi_2": "SBD: 123456"
-	
-	}
-	
-	\end{lstlisting}
-	
-	
-	
-	\subsection{Đánh giá}
-	
-	\begin{itemize}
-	
-	    \item \textbf{Độ chính xác OMR:} Phụ thuộc nhiều vào chất lượng ảnh scan và độ đậm của nét tô. Với các ảnh scan rõ nét, hệ thống cho độ chính xác gần như tuyệt đối.
-	
-	    \item \textbf{Độ chính xác OCR:} Phụ thuộc vào chất lượng của thư viện EasyOCR và độ rõ của chữ viết tay hoặc chữ in. Kết quả tốt với chữ in và có thể giảm độ chính xác với chữ viết tay quá nghệ thuật hoặc mờ.
-	
-	    \item \textbf{Hiệu năng:} Thời gian xử lý cho mỗi phiếu tương đối nhanh, chủ yếu phụ thuộc vào thời gian tải model của EasyOCR trong lần đầu và tốc độ xử lý của CPU.
-	
-	\end{itemize}
-	
-	
-	
-	\section{Kết luận và Hướng phát triển}
+	\section{Kết quả thực nghiệm và Đánh giá}
+
+\subsection{Phương pháp thử nghiệm}
+Do hệ thống không trải qua giai đoạn huấn luyện (OMR là thuật toán kinh điển, OCR sử dụng model có sẵn), khái niệm tập dữ liệu "train/test" không được áp dụng. Thay vào đó, hệ thống được thử nghiệm dưới dạng một nghiên cứu tình huống (case study) với một bộ dữ liệu đơn lẻ:
+\begin{itemize}
+    \item \textbf{Dữ liệu đầu vào:} Một file PDF mẫu (\texttt{Mau\_de\_thi\_co\_dap\_an.pdf}) chứa ảnh scan của một phiếu trả lời đã được điền.
+    \item \textbf{Đáp án:} Một file CSV (\texttt{answer\_key.csv}) chứa danh sách các đáp án đúng.
+\end{itemize}
+Mục tiêu của thử nghiệm là để xác minh tính năng (proof-of-concept) và quan sát hoạt động của hệ thống trên một ví dụ cụ thể, chứ không phải để đo lường hiệu suất trên một tập dữ liệu lớn.
+
+\subsection{Kết quả quan sát được}
+Khi thực thi với dữ liệu mẫu, hệ thống cho ra các kết quả sau:
+\begin{itemize}
+    \item \textbf{Kết quả OMR:} Chấm điểm thành công và tạo ra ảnh \texttt{scoring\_result.png} (trực quan hóa đáp án đúng/sai) và ảnh \texttt{score.png} (báo cáo điểm số). Cụ thể, hệ thống ghi nhận \textbf{4/20} câu đúng, tương đương \textbf{2.0/10 điểm}.
+    \item \textbf{Kết quả OCR:} Trích xuất thành công chuỗi \texttt{'2111Ũ355 153'} từ vùng thông tin thí sinh và lưu vào file \texttt{ocr\_results.json}.
+\end{itemize}
+\textit{Các hình ảnh kết quả được tạo ra trong thư mục \texttt{output/} có thể được chèn vào đây để minh họa cho hoạt động của chương trình.}
+
+\subsection{Đánh giá và Nhìn nhận các hạn chế}
+Phần đánh giá này nhìn nhận lại dự án dựa trên các tiêu chí khoa học và phản hồi thực tế, thay vì chỉ đánh giá trên bề mặt.
+
+\subsubsection{Về "Cấu trúc mô hình"}
+Thuật ngữ "mô hình" cần được hiểu đúng trong bối cảnh của dự án:
+\begin{itemize}
+    \item \textbf{OMR:} Không phải là một mô hình học máy. Đây là một \textbf{thuật toán} xử lý ảnh dựa trên các quy tắc được định sẵn (ngưỡng và đếm pixel). Nó có cấu trúc đơn giản, hiệu quả cho mẫu phiếu cụ thể nhưng không có khả năng "học" hay tổng quát hóa.
+    \item \textbf{OCR:} Hệ thống chỉ \textbf{sử dụng} một model đã được huấn luyện trước (\texttt{EasyOCR}). Đồ án không thực hiện việc xây dựng, huấn luyện hay tinh chỉnh bất kỳ một mô hình học sâu nào. Do đó, phần cấu trúc model OCR thực chất là cấu trúc của thư viện \texttt{EasyOCR}, không phải là một phần do dự án phát triển.
+\end{itemize}
+
+\subsubsection{Về "Tập dữ liệu" và "Kết quả phân tích"}
+Đây là hạn chế lớn nhất của đồ án ở thời điểm hiện tại:
+\begin{itemize}
+    \item \textbf{Thiếu tập dữ liệu chuẩn:} Dự án chỉ được thử nghiệm trên một file mẫu duy nhất. Không có một tập dữ liệu đa dạng (nhiều phiếu thi, nhiều điều kiện scan, nhiều cách tô khác nhau) để có thể đưa ra các kết quả số liệu có ý nghĩa thống kê (ví dụ: độ chính xác trung bình, độ lệch chuẩn, ma trận nhầm lẫn).
+    \item \textbf{Thiếu phân tích số liệu:} Do không có tập dữ liệu kiểm thử, các kết quả thu được (ví dụ: điểm 2.0/10) chỉ là một quan sát đơn lẻ. Không có cơ sở để phân tích sâu hơn về hiệu suất, các trường hợp lỗi, hay so sánh với các phương pháp khác một cách định lượng. Các nhận xét về "độ chính xác gần như tuyệt đối" ở các phiên bản trước của báo cáo là chủ quan và không có cơ sở khoa học.
+\end{itemize}
+Tóm lại, hệ thống hiện tại là một sản phẩm chứng minh ý tưởng (proof-of-concept) hoạt động tốt, nhưng để trở thành một dự án khoa học hoàn chỉnh, việc xây dựng một bộ dữ liệu và thực hiện một quy trình đánh giá nghiêm ngặt là bước đi cần thiết tiếp theo.
+
+\section{Kết luận và Hướng phát triển}
 	
 	
 	

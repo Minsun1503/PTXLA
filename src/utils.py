@@ -134,3 +134,16 @@ def get_outside_of_contour(image, contour):
     outside_image = cv2.bitwise_and(image, image, mask=mask_inv)
 
     return outside_image
+
+
+def get_file_type(file_path):
+    """
+    Returns the file extension in lowercase.
+
+    Args:
+        file_path (str): The path to the file.
+
+    Returns:
+        str: The file extension (e.g., 'pdf', 'png').
+    """
+    return file_path.split('.')[-1].lower()

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2025.6.14)  12 DEC 2025 15:41
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 24.1) (preloaded format=pdflatex 2025.6.14)  25 DEC 2025 17:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -618,75 +618,108 @@ LaTeX Font Info:    External font `cmex10' loaded for size
  [1
 
 {C:/Users/84845.DESKTOP-6UDUU1B/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.ma
-p}]
-LaTeX Font Info:    Trying to load font information for T5+cmtt on input line 7
-9.
+p}] [2]
+LaTeX Font Info:    Trying to load font information for T5+cmtt on input line 9
+2.
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t
 5cmtt.fd
 File: t5cmtt.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `T5/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T5/cmtt/m/n' tried instead on input line 79.
- [2]
-(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/listing
-s\lstlang1.sty
-File: lstlang1.sty 2023/02/27 1.9 listings language file
-)
-(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/listing
-s\lstlang1.sty
-File: lstlang1.sty 2023/02/27 1.9 listings language file
-)
-<images/pipeline.png, id=112, 653.44125pt x 1116.17pt>
-File: images/pipeline.png Graphic file (type png)
-<use images/pipeline.png>
-Package pdftex.def Info: images/pipeline.png  used on input line 123.
-(pdftex.def)             Requested size: 409.71692pt x 699.85268pt.
+(Font)              Font shape `T5/cmtt/m/n' tried instead on input line 99.
  [3]
-Overfull \vbox (128.62685pt too high) has occurred while \output is active []
+Overfull \hbox (55.68108pt too wide) in paragraph at lines 128--129
+[]\T5/cmr/bx/n/12 Nh‡ ph•n h‚a (Bi-na-riza-tion): \T5/cmr/m/n/12 Åp dˆng ph˜Ïng
+ ph°p ng˜Ông cıa Otsu (\T5/cmtt/m/n/12 THRESH_BINARY_INV
+ []
 
 
-[4
+Overfull \hbox (0.24478pt too wide) in paragraph at lines 145--146
+[]\T5/cmr/bx/n/12 LSTM (Long Short-Term Mem-ory): \T5/cmr/m/n/12 MÎt lo§i m§ng 
+nÏ-ron hÁi quy (RNN),
+ []
+
+[4]
+Overfull \hbox (101.8217pt too wide) in paragraph at lines 167--168
+[]\T5/cmr/bx/n/12 Quan trÂng: \T5/cmr/m/n/12 Ng˜Ìi dÚng c¶n th∂m ^^_˜Ìng d®n ^^
+_¶y ^^_ı tÓi th˜ mˆc \T5/cmtt/m/n/12 poppler-25.11.0/Library/bin
+ []
+
+
+(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/listing
+s\lstlang1.sty
+File: lstlang1.sty 2023/02/27 1.9 listings language file
+)
+(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/listing
+s\lstlang1.sty
+File: lstlang1.sty 2023/02/27 1.9 listings language file
+) [5] [6]
+<../output/scoring_result.png, id=172, 1003.75pt x 1405.25pt>
+File: ../output/scoring_result.png Graphic file (type png)
+<use ../output/scoring_result.png>
+Package pdftex.def Info: ../output/scoring_result.png  used on input line 277.
+(pdftex.def)             Requested size: 455.24411pt x 637.35274pt.
+ [7]
+<../output/score.png, id=180, 451.6875pt x 301.125pt>
+File: ../output/score.png Graphic file (type png)
+<use ../output/score.png>
+Package pdftex.def Info: ../output/score.png  used on input line 284.
+(pdftex.def)             Requested size: 227.62206pt x 151.75217pt.
+ [8
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.134 	
-        <./images/pipeline.png>] [5]
-(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/listing
-s\lstlang1.sty
-File: lstlang1.sty 2023/02/27 1.9 listings language file
-) [6] [7] (report.aux)
+l.288 
+       <../output/scoring_result.png (PNG copy)>]
+<../output/outside_area.png, id=185, 1706.375pt x 2208.25pt>
+File: ../output/outside_area.png Graphic file (type png)
+<use ../output/outside_area.png>
+Package pdftex.def Info: ../output/outside_area.png  used on input line 300.
+(pdftex.def)             Requested size: 455.24411pt x 589.12581pt.
+ [9
+pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.304 
+       <../output/score.png (PNG copy)>] [10
+pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.308     \item \textbf
+                       {OCR:} Model ƒë√£ th√†nh c√¥ng trong vi·ªác tr√≠ch xu...
+ <../output/outside_area.png (PNG copy)>] [11] [12] (report.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
  ***********
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: 67A7B31E1BD2703B101B1458A8C08CA8;4192.
+(rerunfilecheck)             Checksum: 045837AAE0A1921A0CD595169D313743;4358.
  ) 
 Here is how much of TeX's memory you used:
- 12104 strings out of 474485
- 186028 string characters out of 5736182
- 1954542 words of memory out of 5000000
- 34207 multiletter control sequences out of 15000+600000
- 573258 words of font info for 62 fonts, out of 8000000 for 9000
+ 12018 strings out of 474485
+ 185192 string characters out of 5736182
+ 1955542 words of memory out of 5000000
+ 34100 multiletter control sequences out of 15000+600000
+ 573583 words of font info for 63 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,8n,79p,419b,1307s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,6n,79p,502b,1256s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappe
 n/ec/dpi600\tcrm1200.pk><C:/Users/84845.DESKTOP-6UDUU1B/AppData/Local/Programs/
-MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/84845.DESKTOP-6UDUU1B
-/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Us
-ers/84845.DESKTOP-6UDUU1B/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/vnr/v
-nbx12.pfb><C:/Users/84845.DESKTOP-6UDUU1B/AppData/Local/Programs/MiKTeX/fonts/t
-ype1/vntex/vnr/vnr12.pfb><C:/Users/84845.DESKTOP-6UDUU1B/AppData/Local/Programs
-/MiKTeX/fonts/type1/vntex/vnr/vnr6.pfb><C:/Users/84845.DESKTOP-6UDUU1B/AppData/
-Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vnti12.pfb><C:/Users/84845.DESKTOP-
-6UDUU1B/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vntt10.pfb><C:/User
-s/84845.DESKTOP-6UDUU1B/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vnt
-t12.pfb>
-Output written on report.pdf (7 pages, 174530 bytes).
+MiKTeX/fonts/type1/vntex/vnr/vnbx12.pfb><C:/Users/84845.DESKTOP-6UDUU1B/AppData
+/Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vnitt10.pfb><C:/Users/84845.DESKTO
+P-6UDUU1B/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vnr12.pfb><C:/Use
+rs/84845.DESKTOP-6UDUU1B/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vn
+r6.pfb><C:/Users/84845.DESKTOP-6UDUU1B/AppData/Local/Programs/MiKTeX/fonts/type
+1/vntex/vnr/vnti12.pfb><C:/Users/84845.DESKTOP-6UDUU1B/AppData/Local/Programs/M
+iKTeX/fonts/type1/vntex/vnr/vntt10.pfb><C:/Users/84845.DESKTOP-6UDUU1B/AppData/
+Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vntt12.pfb>
+Output written on report.pdf (12 pages, 590656 bytes).
 PDF statistics:
- 202 PDF objects out of 1000 (max. 8388607)
- 40 named destinations out of 1000 (max. 500000)
- 158 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 253 PDF objects out of 1000 (max. 8388607)
+ 62 named destinations out of 1000 (max. 500000)
+ 192 words of extra memory for PDF output out of 10000 (max. 10000000)
 

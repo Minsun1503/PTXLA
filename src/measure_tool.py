@@ -3,6 +3,7 @@ import json
 import numpy as np
 from src import pre_processing
 from src import config
+from src import utils
 
 def anchor_point_callback(event, x, y, flags, param):
     """
@@ -26,7 +27,7 @@ def anchor_point_callback(event, x, y, flags, param):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
         cv2.imshow(data["window_name"], data['img'])
 
-def get_coordinates_from_user_selection(pdf_path, coord_save_path):
+def get_coordinates_from_user_selection(file_path, coord_save_path):
     """
     Opens an interactive window to guide the user through a two-phase selection process:
     1. Select 2 anchor points for the answer bubble area on the main warped document.
@@ -37,10 +38,18 @@ def get_coordinates_from_user_selection(pdf_path, coord_save_path):
     Returns:
         tuple: (bubble_anchors, ocr_regions_dict, warped_image, outside_image)
     """
-    # --- Step 1: Get the warped image and the outside area from the PDF ---
-    warped_standard, outside_image = pre_processing.get_warped_image_from_pdf(pdf_path, config.STANDARD_SIZE)
+    # --- Step 1: Get the warped image and the outside area from the file ---
+    file_type = utils.get_file_type(file_path)
+    if file_type == 'pdf':
+        warped_standard, outside_image = pre_processing.get_warped_image_from_pdf(file_path, config.STANDARD_SIZE)
+    elif file_type in ['png', 'jpg', 'jpeg']:
+        warped_standard, outside_image = pre_processing.get_warped_image_from_image(file_path, config.STANDARD_SIZE)
+    else:
+        print(f"Unsupported file type for coordinate selection: {file_type}")
+        return [], {}, None, None
+
     if warped_standard is None or outside_image is None:
-        print("Failed to process the document from PDF.")
+        print("Failed to process the document from the file.")
         return [], {}, None, None
 
     # --- Phase 1: Select Bubble Sheet Anchor Points on the Warped Image ---

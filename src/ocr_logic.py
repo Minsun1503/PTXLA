@@ -26,7 +26,7 @@ def preprocess_for_ocr(image):
 
     # OPTIONAL: Apply other techniques like thresholding or resizing if needed
     # For now, grayscale is a good first step.
-    # gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
     return gray
 
@@ -65,7 +65,7 @@ def extract_text_from_regions(image, ocr_regions):
 
         # 3. Use EasyOCR to read text from the processed ROI
         # The `detail=0` argument returns a list of simple strings.
-        ocr_result = reader.readtext(processed_roi, detail=0, paragraph=True)
+        ocr_result = reader.readtext(processed_roi, detail=0, paragraph=True, allowlist='0123456789')
 
         # 4. Join the results into a single string and clean up
         if ocr_result:

@@ -5,7 +5,6 @@ from src import utils
 from src import config
 
 
-
 def preprocess_image(image):
     """
     Converts the original image to a Canny Edge image.
@@ -118,7 +117,7 @@ def get_warped_image_from_pdf(pdf_path, standard_size):
         scaled_doc_contour = doc_contour.copy().astype(np.float32)
         scaled_doc_contour[:, 0, 0] *= scale_x
         scaled_doc_contour[:, 0, 1] *= scale_y
-        
+
         # Get the area outside the document before warping
         outside_image = utils.get_outside_of_contour(original_image, scaled_doc_contour.astype(int))
 
@@ -126,8 +125,67 @@ def get_warped_image_from_pdf(pdf_path, standard_size):
         warped_image = utils.four_point_transform(original_image, scaled_doc_contour.reshape(4, 2))
         # Resize the warped image to a standard size for consistency
         warped_standard = cv2.resize(warped_image, standard_size)
-        
+
         return warped_standard, outside_image
     else:
         print("Could not find the document frame in the PDF.")
+        return None, None
+
+
+def get_warped_image_from_image(image_path, standard_size):
+    """
+    Loads an image from a file, finds the document, warps it, and returns both
+    the warped document and the area outside of it.
+
+    Args:
+        image_path (str): The path to the image file.
+        standard_size (tuple): The (width, height) to resize the final warped image to.
+
+    Returns:
+        tuple[numpy.ndarray, numpy.ndarray]: A tuple containing:
+            - The processed and standardized document image.
+            - The image of the area outside the document.
+        Returns (None, None) on failure.
+    """
+    try:
+        original_image = cv2.imread(image_path)
+        if original_image is None:
+            raise FileNotFoundError(f"Image not found at {image_path}")
+    except Exception as e:
+        print(f"Error reading image: {e}")
+        return None, None
+
+    # --- IMAGE PRE-PROCESSING ---
+    h_orig, w_orig = original_image.shape[:2]
+    # Resize for faster processing
+    process_height = config.PROCESSING_RESIZE_HEIGHT
+    process_width = int(process_height * w_orig / h_orig)
+    processing_image = cv2.resize(original_image, (process_width, process_height))
+
+    # Find edges and the document contour using existing functions
+    edges = preprocess_image(processing_image)
+    doc_contour = find_document_contour(edges)
+
+    if doc_contour is not None:
+        # --- SCALING AND WARPING ---
+        # Calculate scaling factors to map contour points back to the original image size
+        scale_x = w_orig / process_width
+        scale_y = h_orig / process_height
+
+        # Scale the contour points
+        scaled_doc_contour = doc_contour.copy().astype(np.float32)
+        scaled_doc_contour[:, 0, 0] *= scale_x
+        scaled_doc_contour[:, 0, 1] *= scale_y
+
+        # Get the area outside the document before warping
+        outside_image = utils.get_outside_of_contour(original_image, scaled_doc_contour.astype(int))
+
+        # Apply four-point perspective transform to get the top-down view of the document
+        warped_image = utils.four_point_transform(original_image, scaled_doc_contour.reshape(4, 2))
+        # Resize the warped image to a standard size for consistency
+        warped_standard = cv2.resize(warped_image, standard_size)
+
+        return warped_standard, outside_image
+    else:
+        print("Could not find the document frame in the image.")
         return None, None

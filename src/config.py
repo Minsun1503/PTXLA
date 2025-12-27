@@ -20,6 +20,19 @@ OUTSIDE_AREA_IMAGE_NAME = "outside_area.png"
 OCR_RESULT_JSON_NAME = "ocr_results.json"
 
 
+# --- BATCH PROCESSING ---
+# Enable or disable batch processing mode.
+# If True, the script will process all PDF files in BATCH_INPUT_DIR.
+# If False, it will process the single file specified in PDF_PATH.
+BATCH_MODE = True
+
+# Directory containing the PDF files for batch processing.
+BATCH_INPUT_DIR = "data/raw/batch_input/"
+
+# Directory where subdirectories for each processed file's output will be created.
+BATCH_OUTPUT_DIR = "output/batch_output/"
+
+
 # --- IMAGE PROCESSING ---
 # Standard size of the sheet after warping.
 # All coordinates are based on this standardized size to ensure consistency.

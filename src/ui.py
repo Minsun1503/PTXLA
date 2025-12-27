@@ -134,33 +134,37 @@ def show_final_results(result_image, score_image, ocr_data):
     cv2.destroyAllWindows()  # Close all OpenCV windows
 
 
-def save_output_files(result_image, score_image, ocr_data, outside_image=None):
+def save_output_files(result_image, score_image, ocr_data, outside_image=None, output_dir=None):
     """
-    Saves the result images and OCR data to the output directory.
+    Saves the result images and OCR data to the specified output directory.
 
     Args:
         result_image (numpy.ndarray): The image with grading details.
         score_image (numpy.ndarray): The image with the final score.
         ocr_data (dict): The extracted OCR data dictionary.
-        outside_image (numpy.ndarray, optional): The image of the area outside the document. Defaults to None.
+        outside_image (numpy.ndarray, optional): The image of the area outside the document.
+        output_dir (str, optional): The directory to save files in. Defaults to config.OUTPUT_PATH.
     """
-    if not os.path.exists(config.OUTPUT_PATH):
-        os.makedirs(config.OUTPUT_PATH)
+    # If no output directory is specified, use the default from the config file
+    if output_dir is None:
+        output_dir = config.OUTPUT_PATH
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     # Save images
-    cv2.imwrite(os.path.join(config.OUTPUT_PATH, config.SCORING_RESULT_IMAGE_NAME), result_image)
-    cv2.imwrite(os.path.join(config.OUTPUT_PATH, config.SCORE_IMAGE_NAME), score_image)
+    cv2.imwrite(os.path.join(output_dir, config.SCORING_RESULT_IMAGE_NAME), result_image)
+    cv2.imwrite(os.path.join(output_dir, config.SCORE_IMAGE_NAME), score_image)
     
     # Save the outside area image if it exists
     if outside_image is not None:
-        cv2.imwrite(os.path.join(config.OUTPUT_PATH, config.OUTSIDE_AREA_IMAGE_NAME), outside_image)
-
+        cv2.imwrite(os.path.join(output_dir, config.OUTSIDE_AREA_IMAGE_NAME), outside_image)
 
     # Save OCR data to a JSON file
     if ocr_data:
-        ocr_save_path = os.path.join(config.OUTPUT_PATH, config.OCR_RESULT_JSON_NAME)
+        ocr_save_path = os.path.join(output_dir, config.OCR_RESULT_JSON_NAME)
         with open(ocr_save_path, 'w', encoding='utf-8') as f:
             json.dump(ocr_data, f, ensure_ascii=False, indent=4)
         print(f"--> Saved OCR results to {ocr_save_path}")
 
-    print(f"--> Saved result images to {config.OUTPUT_PATH}")
+    print(f"--> Saved result images to {output_dir}")
