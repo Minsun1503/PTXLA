@@ -1,9 +1,18 @@
 import cv2
 import json
 import numpy as np
-from src import pre_processing
-from src import config
-from src import utils
+import os
+import sys
+
+# Add the project root directory to the Python path
+# This allows us to import modules from the 'src' and 'config' directories
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, project_root)
+
+from src.core import processor
+from src.utils import image_utils, file_io
+import config
+
 
 def anchor_point_callback(event, x, y, flags, param):
     """
@@ -27,7 +36,7 @@ def anchor_point_callback(event, x, y, flags, param):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
         cv2.imshow(data["window_name"], data['img'])
 
-def get_coordinates_from_user_selection(file_path, coord_save_path):
+def get_coordinates_from_user_selection(file_path: str, coord_save_path: str, cfg: config.Config):
     """
     Opens an interactive window to guide the user through a two-phase selection process:
     1. Select 2 anchor points for the answer bubble area on the main warped document.
@@ -35,18 +44,29 @@ def get_coordinates_from_user_selection(file_path, coord_save_path):
 
     Saves the coordinates to a JSON file.
 
+    Args:
+        file_path (str): The path to the template file (PDF or image).
+        coord_save_path (str): The path to save the output JSON file.
+        cfg (config.Config): The application configuration object.
+
     Returns:
         tuple: (bubble_anchors, ocr_regions_dict, warped_image, outside_image)
     """
     # --- Step 1: Get the warped image and the outside area from the file ---
-    file_type = utils.get_file_type(file_path)
+    file_type = file_io.get_file_type(file_path)
     if file_type == 'pdf':
-        warped_standard, outside_image = pre_processing.get_warped_image_from_pdf(file_path, config.STANDARD_SIZE)
+        original_image = processor.get_image_from_pdf(file_path)
     elif file_type in ['png', 'jpg', 'jpeg']:
-        warped_standard, outside_image = pre_processing.get_warped_image_from_image(file_path, config.STANDARD_SIZE)
+        original_image = processor.get_image_from_file(file_path)
     else:
         print(f"Unsupported file type for coordinate selection: {file_type}")
         return [], {}, None, None
+
+    if original_image is None:
+        print(f"Failed to load image from {file_path}.")
+        return [], {}, None, None
+
+    warped_standard, outside_image = processor.process_and_warp_image(original_image, cfg.ImageProcessing)
 
     if warped_standard is None or outside_image is None:
         print("Failed to process the document from the file.")
@@ -54,8 +74,8 @@ def get_coordinates_from_user_selection(file_path, coord_save_path):
 
     # --- Phase 1: Select Bubble Sheet Anchor Points on the Warped Image ---
     p1_h, p1_w = warped_standard.shape[:2]
-    p1_display_scale = p1_w / config.DISPLAY_WIDTH # Scale width to 1200px for display
-    p1_display_w = config.DISPLAY_WIDTH
+    p1_display_w = cfg.UI.DISPLAY_WIDTH
+    p1_display_scale = p1_w / p1_display_w
     p1_display_h = int(p1_h / p1_display_scale)
     
     display_image_phase1 = cv2.resize(warped_standard, (p1_display_w, p1_display_h))
@@ -82,8 +102,8 @@ def get_coordinates_from_user_selection(file_path, coord_save_path):
 
     # --- Phase 2: Select OCR Information Area Anchors on the Outside Image ---
     p2_h, p2_w = outside_image.shape[:2]
-    p2_display_scale = p2_w / config.DISPLAY_WIDTH # Scale width to 1200px for display
-    p2_display_w = config.DISPLAY_WIDTH
+    p2_display_w = cfg.UI.DISPLAY_WIDTH
+    p2_display_scale = p2_w / p2_display_w
     p2_display_h = int(p2_h / p2_display_scale)
 
     display_image_phase2 = cv2.resize(outside_image, (p2_display_w, p2_display_h))
@@ -116,19 +136,38 @@ def get_coordinates_from_user_selection(file_path, coord_save_path):
         y = min(p1[1], p2[1])
         w = abs(p1[0] - p2[0])
         h = abs(p1[1] - p2[1])
-        ocr_regions[config.KEY_INFO_BLOCK] = [x, y, w, h]
-        print(f"  > Created OCR region '{config.KEY_INFO_BLOCK}' at [{x}, {y}, {w}, {h}]")
+        ocr_regions[cfg.JSON.KEY_INFO_BLOCK] = [x, y, w, h]
+        print(f"  > Created OCR region '{cfg.JSON.KEY_INFO_BLOCK}' at [{x}, {y}, {w}, {h}]")
 
     final_data = {
-        config.KEY_BUBBLE_ANCHORS: captured_bubble_anchors,
-        config.KEY_OCR_REGIONS: ocr_regions
+        cfg.JSON.KEY_BUBBLE_ANCHORS: captured_bubble_anchors,
+        cfg.JSON.KEY_OCR_REGIONS: ocr_regions
     }
-    print(f"\n--> Saving coordinates to {coord_save_path}")
-    try:
-        with open(coord_save_path, 'w') as f:
-            json.dump(final_data, f, indent=4)
-    except Exception as e:
-        print(f"Error saving coordinates: {e}")
-        return [], {}, None, None
+    
+    file_io.save_json(final_data, coord_save_path)
 
     return captured_bubble_anchors, ocr_regions, warped_standard, outside_image
+
+if __name__ == '__main__':
+    """
+    Main entry point for the template creation tool.
+    """
+    print("--- Starting Coordinate and Region Definition Tool ---")
+    
+    # Load configuration
+    cfg = config.Config()
+    
+    # Define the path to the template file. You can change this to point to your template.
+    template_file = cfg.Paths.PDF_PATH 
+    
+    print(f"Using template file: {template_file}")
+    
+    # Run the interactive selection process
+    get_coordinates_from_user_selection(
+        file_path=template_file,
+        coord_save_path=cfg.Paths.COORDINATES_PATH,
+        cfg=cfg
+    )
+    
+    print("\n--- Coordinate setup complete! ---")
+    print(f"Data saved to: {cfg.Paths.COORDINATES_PATH}")
