@@ -62,10 +62,16 @@ class Config:
 
     class OMRConfig:
         """Parameters for the Optical Mark Recognition (OMR) logic."""
-        NUM_QUESTIONS_PER_COLUMN: int = 20
+        NUM_QUESTIONS_PER_COLUMN: int = 50 # Hoặc 20 tuỳ đề của bạn
         NUM_CHOICES_PER_QUESTION: int = 4
-        SCAN_RADIUS: int = 12
-        PIXEL_THRESHOLD: int = 150
+        
+        # [NÂNG CẤP] Tăng bán kính để bắt trọn ô dù bị lệch
+        SCAN_RADIUS: int = 14  
+        
+        # [NÂNG CẤP] Ngưỡng pixel (Adaptive Threshold tạo ra ảnh nhị phân rất rõ nét 
+        # nên ta có thể tăng ngưỡng này lên để lọc nhiễu tốt hơn)
+        PIXEL_THRESHOLD: int = 180 
+        
         ANSWER_MAP: dict[str, int] = {'A': 0, 'B': 1, 'C': 2, 'D': 3}
 
     class OCRConfig:
