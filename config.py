@@ -1,5 +1,6 @@
 import os
 
+
 class Config:
     """
     Centralized configuration class for the OMR/OCR grading application.
@@ -41,7 +42,7 @@ class Config:
             self.COORDINATES_PATH: str = os.path.join(root, "data/template/", "coordinates.json")
             self.BATCH_INPUT_DIR: str = os.path.join(root, "data/raw/batch_input/")
             self.BATCH_OUTPUT_DIR: str = os.path.join(root, "output/batch_output/")
-            
+
             self.SCORING_RESULT_IMAGE_NAME: str = "scoring_result.png"
             self.SCORE_IMAGE_NAME: str = "score.png"
             self.OUTSIDE_AREA_IMAGE_NAME: str = "outside_area.png"
@@ -55,8 +56,8 @@ class Config:
         """Parameters for image pre-processing and manipulation."""
         STANDARD_SIZE: tuple[int, int] = (1000, 1400)
         PROCESSING_RESIZE_HEIGHT: int = 800
-        CANNY_THRESHOLD_1: int = 75
-        CANNY_THRESHOLD_2: int = 200
+        CANNY_THRESHOLD_1: int = 30
+        CANNY_THRESHOLD_2: int = 100
         CONTOUR_APPROX_EPSILON: float = 0.02
 
     class OMRConfig:
@@ -74,8 +75,8 @@ class Config:
 
     class UIConfig:
         """Parameters for UI elements and display settings."""
-        DISPLAY_WIDTH: int = 800
-        DISPLAY_HEIGHT: int = 700
+        DISPLAY_WIDTH: int = 400
+        DISPLAY_HEIGHT: int = 350
 
     class JSONConfig:
         """Keys used for serialization and deserialization of JSON data."""
