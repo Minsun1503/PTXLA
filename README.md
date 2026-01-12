@@ -1,103 +1,115 @@
-# Automatic Test Grading System (OMR & OCR)
+# 🚀 SmartGrader \- Hệ Thống Chấm Thi & Số Hóa Thông Tin Tự Động
 
-This project is a Python application for automatically grading multiple-choice tests from scanned images or PDF files. It uses computer vision techniques to identify the test sheet, perform Optical Mark Recognition (OMR) on the answer grid, and use Optical Character Recognition (OCR) to extract additional information like student IDs.
+PythonOpenCVEasyOCRReportLab
 
-The codebase has been refactored to a data-driven architecture, separating the core processing engine from data and configuration.
+## 📖 Giới thiệu
 
-## Features
+**SmartGrader** là giải pháp phần mềm mã nguồn mở giải quyết bài toán tự động hóa quy trình chấm thi trắc nghiệm với chi phí thấp 1\. Thay vì phụ thuộc vào các máy chấm thi chuyên dụng đắt tiền, hệ thống tận dụng sức mạnh của **Computer Vision** và **Deep Learning** để xử lý phiếu trả lời từ ảnh chụp điện thoại hoặc máy scan văn phòng.  
+Dự án không chỉ dừng lại ở việc chấm điểm (OMR) mà còn tích hợp khả năng nhận dạng chữ viết (OCR) để số hóa thông tin thí sinh, tạo nên một quy trình khép kín từ khâu tạo đề đến xuất báo cáo 2\.
 
-- **Automatic Document Warping**: Straightens and corrects the perspective of the test sheet.
-- **Data-Driven Core Engine**:
-  - **OMR (Optical Mark Recognition)**: Detects selected choices in the answer grid.
-  - **OCR (Optical Character Recognition)**: Extracts text from predefined regions.
-- **Batch Processing**: Can process multiple files from a directory.
-- **Flexible Input**: Supports both PDF and common image formats (PNG, JPG, JPEG).
-- **Centralized Configuration**: A single `config.py` file manages all settings in a structured way.
-- **Interactive Template Setup**: A graphical tool to easily define the layout of a new test sheet.
+## 🌟 Tính năng nổi bật (Key Features)
 
-## Project Structure
+Hệ thống được xây dựng dựa trên kiến trúc module hóa (Data-Driven Architecture) với các điểm nhấn kỹ thuật:
 
-The project is organized into a modular structure:
+### 🛠️ 1\. Auto Sheet Generator (Tạo đề chuẩn xác)
 
-```
-PTXLA/
-├── main.py                # Main orchestrator script
-├── config.py              # Central configuration file
-├── requirements.txt
-├── data/
-│   ├── answer/            # Contains the answer key (e.g., answer_key.csv)
-│   ├── raw/               # Raw input files (PDFs, images)
-│   └── template/          # Stores the generated coordinates template
-├── src/
-│   ├── core/
-│   │   ├── processor.py   # Image warping and pre-processing
-│   │   ├── omr_engine.py  # Core bubble grading logic
-│   │   └── ocr_engine.py  # Core text extraction logic
-│   ├── utils/
-│   │   ├── file_io.py     # JSON/CSV reading/writing
-│   │   └── image_utils.py # Geometric image transformations
-│   └── view/
-│       └── renderer.py    # Drawing results, creating score images
-└── tools/
-    └── create_template.py # Interactive tool to create the coordinate template
-```
+Sử dụng **ReportLab** trong module tools/generate\_sheet.py để sinh ra phiếu thi dưới dạng PDF bằng mã lệnh.
 
-## How to Run
+* **Lợi ích:** Tạo ra **Ground Truth** (tọa độ đáp án) chính xác tuyệt đối ngay từ đầu, loại bỏ sai số do thiết kế thủ công, đảm bảo sự đồng bộ hoàn hảo với engine chấm điểm 3, 4\.
 
-### 1. Prerequisites
+### 👁️ 2\. Robust OMR Engine (Chống nhiễu & Bóng đổ)
 
-- Python 3.9+
-- Poppler (for PDF processing). Must be accessible from your system's PATH.
+Thuật toán chấm điểm trong src/core/omr\_engine.py được tối ưu hóa cho các điều kiện thực tế khắc nghiệt.
 
-### 2. Installation
+* **Kỹ thuật:** Sử dụng **Adaptive Thresholding (Gaussian C)** thay vì phân ngưỡng cố định.  
+* **Hiệu quả:** Tự động thích nghi với điều kiện ánh sáng không đồng đều, loại bỏ hiện tượng bóng đổ (shadows) hoặc giấy bị ố màu, đảm bảo tách biệt chính xác vết mực tô và nền giấy 5, 6\.
 
-Clone the repository and install the required Python packages:
+### 📝 3\. Intelligent OCR & Validation (Lọc nhiễu dữ liệu)
 
-```bash
-git clone <repository-url>
-cd PTXLA
-pip install -r requirements.txt
-```
+Module src/core/ocr\_engine.py kết hợp sức mạnh của **EasyOCR** với quy trình hậu xử lý (Post-processing) nghiêm ngặt.
 
-### 3. Configuration
+* **Kỹ thuật:** Tích hợp **Regex Validation**.  
+* **Hiệu quả:** Tự động làm sạch dữ liệu sau khi nhận dạng (ví dụ: trường SBD chỉ chấp nhận số, Tên tự động viết hoa chữ cái đầu), giúp loại bỏ các ký tự rác do nhiễu ảnh gây ra 7, 8\.
 
-All configuration is handled in the `config.py` file.
+## ⚙️ Cài đặt (Installation)
 
-1.  **Place Input Files**:
-    - For **batch processing**, place your test sheets in the `data/raw/batch_input/` directory.
-    - For **single file processing**, ensure the `PDF_PATH` in `config.py` points to your file.
-2.  **Set Answer Key**: Make sure your answer key is correctly formatted in `data/answer/answer_key.csv`.
-3.  **Review Settings**: Open `config.py` and adjust settings as needed. You can toggle `BATCH_MODE` between `True` and `False`.
+### 1\. Cài đặt thư viện
 
-### 4. Step 1: Create the Exam Template
+Clone dự án và cài đặt các dependencies cần thiết qua pip:  
+git clone https://github.com/your-username/SmartGrader.git  
+cd SmartGrader  
+pip install \-r requirements.txt
 
-Before grading, you must teach the application where the answer bubbles and OCR fields are located on your exam sheet.
+### 2\. Cấu hình Poppler (Quan trọng ⚠️)
 
-Run the interactive template creation tool. Make sure to use a clean, unscanned version of your exam sheet (as a PDF or image) as the template.
+Dự án sử dụng thư viện pdf2image để xử lý file PDF, thư viện này yêu cầu **Poppler** phải được cài đặt trong hệ thống 9, 10\.
 
-```bash
-python tools/create_template.py
-```
+* **Windows:** Thư mục poppler-25.11.0 đã được đính kèm trong source code.  
+* **Bước bắt buộc:** Bạn **PHẢI** thêm đường dẫn .../PTXLA/poppler-25.11.0/Library/bin vào biến môi trường **PATH** của Windows. Nếu không, chương trình sẽ báo lỗi PopplerNotInstalledError 10\.
 
-The tool will guide you through a two-phase process in a graphical window:
-- **Phase 1**: Select the anchor points for the answer bubble grid on the main test sheet.
-- **Phase 2**: Select the anchor points for any information block (like a student ID) on the part of the image outside the main sheet.
+## 🕹️ Hướng dẫn sử dụng (Usage)
 
-This will create a `coordinates.json` file in the `data/template/` directory. **This step only needs to be done once for each unique exam layout.**
+Quy trình vận hành được thiết kế theo luồng 4 bước đơn giản:
 
-### 5. Step 2: Run the Grading Process
+### Bước 1: Tạo phiếu thi mẫu
 
-Once the template is created, run the main application:
+Chạy công cụ Generator để tạo file PDF phiếu thi chuẩn (chứa các marker định vị chính xác):  
+python tools/generate\_sheet.py  
+*(File kết quả sẽ được lưu, dùng file này để in ra giấy)* 4\.
 
-```bash
-python main.py
-```
+### Bước 2: Làm bài thi
 
-- If `BATCH_MODE` is `True` in `config.py`, the script will process all files in the batch input directory.
-- If `BATCH_MODE` is `False`, it will process the single file specified in the config and display the results in a window.
+In phiếu thi ra giấy. Tô các ô đáp án và điền thông tin (SBD, Tên) bằng bút màu đậm (đen hoặc xanh).
 
-**Note for Windows Users**: To avoid potential `UnicodeEncodeError` in the console, it is recommended to run the scripts with the `PYTHONIOENCODING` environment variable set to `utf-8`:
+### Bước 3: Chuẩn bị dữ liệu đầu vào
 
-```powershell
-$env:PYTHONIOENCODING='utf-8'; python main.py
-```
+Chụp ảnh hoặc scan các phiếu đã làm bài. Copy toàn bộ ảnh vào thư mục xử lý theo lô:👉 data/raw/batch\_input/ 11, 12\.
+
+### Bước 4: Chạy hệ thống chấm điểm
+
+Kích hoạt main.py để hệ thống tự động quét, xử lý và xuất điểm:  
+python main.py  
+*Lưu ý: Hệ thống sẽ tự động load template từ coordinates.json và xử lý hàng loạt các ảnh trong thư mục input* 13\.
+
+## 📂 Cấu trúc dự án (Project Structure)
+
+Cây thư mục được tổ chức theo mô hình **MVC (Model-View-Controller)** tách biệt rõ ràng giữa xử lý logic và dữ liệu 14:  
+PTXLA/  
+├── main.py                  \# 🚀 Orchestrator: Điều phối luồng chạy chính  
+├── config.py                \# ⚙️ Configuration: Quản lý tham số tập trung  
+├── requirements.txt         \# 📦 Dependencies  
+├── data/                    \# 💾 Data Layer  
+│   ├── answer/              \# Chứa đáp án (CSV)  
+│   ├── raw/                 \# Dữ liệu thô (PDF gốc, ảnh chụp đầu vào)  
+│   │   └── batch\_input/     \# Folder chứa ảnh cần chấm (Bước 3\)  
+│   └── template/            \# Chứa coordinates.json (cấu hình tọa độ)  
+├── src/                     \# 🧠 Source Code Layer  
+│   ├── core/                \# Core Logic  
+│   │   ├── omr\_engine.py    \# Engine chấm trắc nghiệm (Adaptive Threshold)  
+│   │   ├── ocr\_engine.py    \# Engine đọc chữ (EasyOCR \+ Regex)  
+│   │   └── processor.py     \# Xử lý ảnh (Warp, Contour)  
+│   ├── utils/               \# Utilities (File I/O, Image transform)  
+│   └── view/                \# Presentation Layer  
+│       └── renderer.py      \# Vẽ kết quả lên ảnh (Draw results)  
+├── tools/                   \# 🛠️ Helper Tools  
+│   ├── generate\_sheet.py    \# Tạo phiếu thi PDF (Generator)  
+│   └── create\_template.py   \# Tool định nghĩa tọa độ (Interactive)  
+└── output/                  \# 📤 Result Layer (Ảnh kết quả, file JSON)
+
+## 🚧 Hạn chế & Hướng phát triển
+
+Dựa trên báo cáo thực nghiệm, hệ thống hiện tại còn một số điểm cần cải thiện trong các phiên bản tiếp theo 15-17:
+
+### Hạn chế (Limitations)
+
+* **Phụ thuộc khung viền (Frame Dependency):** Thuật toán hiện tại dựa vào việc tìm 4 góc của khung hình chữ nhật. Nếu ảnh chụp bị mất góc hoặc khung bị che khuất, quá trình Warp Perspective sẽ thất bại.  
+* **OCR chữ viết tay:** Thư viện EasyOCR hoạt động tốt với chữ in nhưng độ chính xác giảm với chữ viết tay tiếng Việt ngoằn ngoèo hoặc viết tắt.  
+* **Cấu trúc tĩnh:** Phụ thuộc vào template tọa độ cố định, khó thích nghi nếu mẫu phiếu thay đổi bố cục đột ngột.
+
+### Hướng phát triển (Future Roadmap)
+
+*  **Deep Learning Integration:** Thay thế thuật toán tìm biên Canny bằng mô hình **YOLO** để phát hiện phiếu thi ngay cả khi bị che khuất hoặc biến dạng mạnh.  
+*  **Handwriting Improvement:** Fine-tune lại model OCR chuyên biệt cho bộ dữ liệu chữ viết tay tiếng Việt.  
+*  **Desktop GUI:** Xây dựng giao diện đồ họa (PyQt/Tkinter) để người dùng không cần thao tác qua dòng lệnh.
+
+*Project by Nguyễn Thế Minh Nhật / Nhóm 10*  
