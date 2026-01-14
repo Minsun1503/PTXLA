@@ -9,52 +9,37 @@ def draw_results_on_image(
     student_answers: List[int],
     correct_answers: List[int],
     results: List[bool],
-    all_coords: List[List[List[int]]],
+    all_coords: List[List[List[int]]], # Chính là answer_bubbles từ coordinates.json
     omr_cfg: Config.OMRConfig
 ) -> np.ndarray:
-    """
-    Draws the grading results (circles, marks) on the provided image.
-
-    Args:
-        image: The warped image to draw on.
-        student_answers: The list of student's answers (indices).
-        correct_answers: The list of correct answers from the key (indices).
-        results: A list of booleans indicating correctness for each question.
-        all_coords: A nested list of coordinates for all answer bubbles.
-        omr_cfg: The OMR configuration object.
-
-    Returns:
-        The image with the results drawn on it.
-    """
     display_image = image.copy()
-    idx = 0
+    
+    # Duyệt qua từng câu hỏi trong danh sách tọa độ [4]
+    for idx, q_bubbles in enumerate(all_coords):
+        if idx >= len(student_answers):
+            break
 
-    for col in all_coords:
-        for q_coords in col:
-            if idx >= len(student_answers):
-                break
+        student_choice = student_answers[idx]
+        is_correct = results[idx] if idx < len(results) else False
+        color = (0, 255, 0) if is_correct else (0, 0, 255)
 
-            student_choice = student_answers[idx]
-            is_correct = results[idx] if idx < len(results) else False
-            color = (0, 255, 0) if is_correct else (0, 0, 255)
+        # KHẮC PHỤC LỖI UNPACK: Lấy tọa độ của ô cụ thể [5]
+        if student_choice != -1:
+            # Truy cập vào index của ô được chọn (0-3 cho A-D)
+            cx, cy = q_bubbles[student_choice] 
+            cv2.circle(display_image, (cx, cy), omr_cfg.SCAN_RADIUS + 3, color, 2)
+        else:
+            # Nếu bỏ trống, dùng tọa độ ô đầu tiên để đặt dấu "?" [5]
+            cx, cy = q_bubbles
+            cv2.putText(display_image, "?", (cx - 15, cy + 7), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-            # Mark the student's choice
-            if student_choice != -1:
-                cx, cy = q_coords[student_choice]
-                cv2.circle(display_image, (cx, cy), omr_cfg.SCAN_RADIUS + 3, color, 2)
-            else:
-                # Mark skipped questions
-                cx, cy = q_coords[0]
-                cv2.putText(display_image, "?", (cx - 15, cy + 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-
-            # If incorrect, mark the correct answer
-            if not is_correct and idx < len(correct_answers):
-                correct_idx = correct_answers[idx]
-                if correct_idx != -1:
-                    cx_corr, cy_corr = q_coords[correct_idx]
-                    cv2.circle(display_image, (cx_corr, cy_corr), 5, (0, 255, 0), -1)
-            
-            idx += 1
+        # Đánh dấu đáp án đúng nếu thí sinh làm sai [5]
+        if not is_correct and idx < len(correct_answers):
+            correct_idx = correct_answers[idx]
+            if correct_idx != -1:
+                cx_corr, cy_corr = q_bubbles[correct_idx]
+                cv2.circle(display_image, (cx_corr, cy_corr), 5, (0, 255, 0), -1)
 
     return display_image
 
