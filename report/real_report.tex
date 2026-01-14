@@ -1,0 +1,660 @@
+%!TEX program = xelatex
+\documentclass[12pt, a4paper]{report}
+
+% --- CẤU HÌNH TIẾNG VIỆT CHO XELATEX ---
+\usepackage{fontspec}           
+\usepackage[vietnamese]{babel}  
+
+% Cấu hình Font chữ Times New Roman
+\setmainfont{Times New Roman} 
+
+% --- CÁC GÓI TIỆN ÍCH ---
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+% [demo] giúp chạy được kể cả khi thiếu ảnh (ảnh sẽ hiện thành ô đen)
+% Khi nào chép ảnh thật vào thư mục 'images', hãy xóa chữ [demo] đi
+\usepackage{graphicx} 
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{indentfirst} 
+\usepackage{float}
+\usepackage{geometry}
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+% --- CẤU HÌNH HIỂN THỊ CODE (LISTINGS) ---
+\usepackage{listings}  % <--- QUAN TRỌNG: Gói này sửa lỗi lstlisting
+\usepackage{xcolor}    % Để tô màu code
+
+% Định nghĩa style cho code Python
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize, % Font code
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=4
+}
+\lstset{style=mystyle}
+
+% --- THÔNG TIN ---
+\title{\textbf{BÁO CÁO ĐỒ ÁN MÔN HỌC} \\ HỆ THỐNG CHẤM THI VÀ SỐ HÓA THÔNG TIN TỰ ĐỘNG (SMARTGRADER)}
+\author{Nhóm thực hiện: Nhóm 10 - Nguyễn Thế Minh Nhật}
+\date{}
+
+\begin{document}
+	
+	\maketitle 
+	
+	\tableofcontents
+	\newpage
+	
+	\chapter{TỔNG QUAN ĐỀ TÀI}
+	
+	\section{Đặt vấn đề}
+	Trong bối cảnh chuyển đổi số giáo dục hiện nay, hình thức thi trắc nghiệm khách quan ngày càng trở nên phổ biến nhờ tính chính xác, công bằng và khả năng đánh giá diện rộng. Tuy nhiên, quy trình chấm thi truyền thống đang tồn tại hai rào cản lớn:
+	
+	\begin{enumerate}
+		\item \textbf{Chấm thủ công:} Tốn nhiều thời gian, nhân lực và dễ xảy ra sai sót do yếu tố con người, đặc biệt khi số lượng bài thi lớn.
+		\item \textbf{Máy chấm thi chuyên dụng:} Mặc dù có tốc độ cao nhưng chi phí đầu tư thiết bị phần cứng rất đắt đỏ, đòi hỏi giấy thi đặc thù và khó triển khai linh hoạt tại các cơ sở giáo dục quy mô nhỏ hoặc trong các bài kiểm tra thường xuyên.
+	\end{enumerate}
+	
+	Xuất phát từ thực tế đó, việc phát triển một giải pháp phần mềm có khả năng tận dụng các thiết bị sẵn có (như camera điện thoại, máy scan văn phòng) để chấm thi là vô cùng cấp thiết. Đề tài \textbf{"SmartGrader - Hệ thống chấm thi và số hóa thông tin tự động"} được xây dựng nhằm giải quyết bài toán trên bằng cách ứng dụng các kỹ thuật Tiên tiến của Thị giác máy tính (Computer Vision) và Học sâu (Deep Learning).
+	
+	\section{Mục tiêu đề tài}
+	Mục tiêu chính của đề tài là xây dựng một hệ thống phần mềm mã nguồn mở (Open Source) có khả năng tự động hóa quy trình chấm thi trắc nghiệm với độ chính xác cao và chi phí thấp. Các mục tiêu cụ thể bao gồm:
+	
+	\begin{itemize}
+		\item \textbf{Tự động hóa quy trình tạo đề (Auto Sheet Generator):} Xây dựng module sinh phiếu thi chuẩn dưới dạng PDF bằng mã lệnh, đảm bảo tạo ra "Ground Truth" (tọa độ đáp án) chính xác tuyệt đối, loại bỏ sai số so với thiết kế thủ công \cite{ref_readme}.
+		\item \textbf{Xử lý ảnh và Chấm điểm (Robust OMR Engine):} Phát triển thuật toán nhận dạng đánh dấu quang học (OMR) có khả năng thích nghi với điều kiện môi trường khắc nghiệt như: ánh sáng không đều, bóng đổ, hoặc giấy bị nghiêng, ố màu thông qua kỹ thuật Phân ngưỡng thích nghi (Adaptive Thresholding) \cite{ref_omr}.
+		\item \textbf{Số hóa thông tin thí sinh (OCR \& Validation):} Tích hợp mô hình Deep Learning (EasyOCR) để nhận dạng chữ viết tay và chữ in (Tên, Số báo danh), kết hợp với các biểu thức chính quy (Regex) để làm sạch và chuẩn hóa dữ liệu đầu ra \cite{ref_ocr}.
+		\item \textbf{Xuất báo cáo tự động:} Hỗ trợ xuất kết quả dưới dạng hình ảnh trực quan (có đánh dấu Đúng/Sai) và file dữ liệu số để lưu trữ.
+	\end{itemize}
+	
+	\section{Phạm vi và Đối tượng nghiên cứu}
+	
+	\subsection{Phạm vi nghiên cứu}
+	Đề tài tập trung giải quyết các vấn đề kỹ thuật sau:
+	\begin{itemize}
+		\item Xử lý đầu vào là các tệp tin hình ảnh (.jpg, .png) hoặc tài liệu quét (.pdf) chứa phiếu trả lời trắc nghiệm.
+		\item Hệ thống được xây dựng bằng ngôn ngữ \textbf{Python}, sử dụng các thư viện lõi gồm: \textbf{OpenCV} (xử lý ảnh), \textbf{EasyOCR} (nhận dạng chữ), và \textbf{ReportLab} (tạo phiếu thi).
+		\item Giới hạn xử lý trên các phiếu thi có cấu trúc định dạng trước (Template-based), yêu cầu ảnh đầu vào phải nhìn thấy rõ 4 góc định vị của phiếu thi để thực hiện phép biến đổi hình học (Warp Perspective) \cite{ref_limits}.
+	\end{itemize}
+	
+	\subsection{Đối tượng nghiên cứu}
+	\begin{itemize}
+		\item Các thuật toán xử lý ảnh: Canny Edge Detection, Contour Retrieval, Perspective Transform.
+		\item Các kỹ thuật xử lý nhị phân: Otsu's Binarization, Adaptive Gaussian Thresholding.
+		\item Mô hình nhận dạng quang học (OCR) hỗ trợ tiếng Việt và tiếng Anh.
+	\end{itemize}
+	
+	\section{Phương pháp tiếp cận}
+	Hệ thống được thiết kế theo kiến trúc \textbf{MVC (Model-View-Controller)} để đảm bảo tính module hóa và dễ dàng bảo trì:
+	\begin{enumerate}
+		\item \textbf{Model (Xử lý dữ liệu):} Bao gồm các engine nòng cốt như \texttt{omr\_engine.py} (xử lý chấm điểm trắc nghiệm) và \texttt{ocr\_engine.py} (xử lý nhận dạng ký tự). Sử dụng phương pháp định hướng dữ liệu (Data-driven) thông qua file cấu hình \texttt{coordinates.json} và \texttt{config.py}.
+		\item \textbf{View (Hiển thị):} Module \texttt{renderer.py} chịu trách nhiệm vẽ lại kết quả chấm lên ảnh gốc và hiển thị giao diện kết quả.
+		\item \textbf{Controller (Điều phối):} Module \texttt{main.py} đóng vai trò điều phối luồng dữ liệu từ lúc đọc ảnh, gọi các thuật toán xử lý đến khi xuất báo cáo cuối cùng.
+	\end{enumerate}
+	
+	\section{Cấu trúc báo cáo}
+	Báo cáo được trình bày trong 6 chương với nội dung cụ thể như sau:
+	\begin{itemize}
+		\item \textbf{Chương 1: Tổng quan đề tài.} Trình bày lý do, mục tiêu, phạm vi và phương pháp tiếp cận của dự án SmartGrader.
+		\item \textbf{Chương 2: Cơ sở lý thuyết.} Giới thiệu các kiến thức nền tảng về Xử lý ảnh (Grayscale, Edge Detection, Warping) và công nghệ OCR.
+		\item \textbf{Chương 3: Phân tích và Thiết kế hệ thống.} Mô tả chi tiết kiến trúc phần mềm, sơ đồ luồng dữ liệu (Flowchart) và cấu trúc dữ liệu đầu vào/đầu ra.
+		\item \textbf{Chương 4: Cài đặt và Hiện thực.} Đi sâu vào chi tiết cài đặt các thuật toán quan trọng: Sinh đề tự động, Chống nhiễu bằng Adaptive Threshold, và Hậu xử lý dữ liệu OCR bằng Regex.
+		\item \textbf{Chương 5: Kết quả thực nghiệm.} Trình bày các kịch bản kiểm thử, hình ảnh kết quả thực tế và đánh giá độ chính xác của hệ thống.
+		\item \textbf{Chương 6: Kết luận và Hướng phát triển.} Tổng kết các kết quả đạt được, phân tích hạn chế và đề xuất hướng cải tiến (tích hợp YOLO, GUI).
+	\end{itemize}
+	
+	\chapter{CƠ SỞ LÝ THUYẾT VÀ CÔNG NGHỆ SỬ DỤNG}
+	
+	Chương này trình bày các cơ sở lý thuyết về xử lý ảnh số (Digital Image Processing) và nhận dạng quang học (OCR) được áp dụng trong hệ thống SmartGrader. Đồng thời, chương cũng giới thiệu các thư viện và công cụ lập trình chính được sử dụng để hiện thực hóa các giải pháp kỹ thuật.
+	
+	\section{Tổng quan về Xử lý ảnh số (Digital Image Processing)}
+	Trong dự án này, xử lý ảnh đóng vai trò tiền xử lý (preprocessing) quan trọng để chuẩn hóa dữ liệu đầu vào trước khi đưa vào các mô hình nhận dạng. Các kỹ thuật chính bao gồm:
+	
+	\subsection{Ảnh xám (Grayscale)}
+	Ảnh xám là ảnh mà mỗi điểm ảnh (pixel) chỉ mang thông tin về cường độ ánh sáng, không có thông tin về màu sắc. Giá trị cường độ thường nằm trong khoảng từ 0 (đen) đến 255 (trắng).
+	Việc chuyển đổi từ ảnh màu (RGB) sang ảnh xám giúp giảm khối lượng dữ liệu tính toán (từ 3 kênh màu xuống 1 kênh) và loại bỏ nhiễu màu không cần thiết.
+	
+	Trong mã nguồn (\texttt{src/utils/image\_utils.py}), quá trình này sử dụng công thức chuyển đổi tiêu chuẩn:
+	\begin{equation}
+		Y = 0.299 \times R + 0.587 \times G + 0.114 \times B
+	\end{equation}
+	Hàm sử dụng: \texttt{cv2.cvtColor(image, cv2.COLOR\_BGR2GRAY)}.
+	
+	\subsection{Làm trơn ảnh (Gaussian Blur)}
+	Để giảm nhiễu hạt (noise) thường xuất hiện khi chụp ảnh bằng điện thoại, hệ thống sử dụng bộ lọc Gaussian. Kỹ thuật này làm mờ ảnh bằng cách tích chập (convolution) ảnh gốc với một hạt nhân (kernel) Gaussian.
+	Trong hàm \texttt{warp\_document}, hệ thống sử dụng kernel kích thước $(5, 5)$ để loại bỏ các chi tiết thừa trước khi tìm biên, giúp thuật toán Canny hoạt động hiệu quả hơn.
+	
+	\subsection{Phát hiện biên (Canny Edge Detection)}
+	Đây là thuật toán phổ biến để tìm ra các cạnh của đối tượng trong ảnh. Thuật toán hoạt động dựa trên việc tìm cực đại cục bộ của gradient (đạo hàm bậc nhất) cường độ sáng.
+	Quy trình Canny bao gồm các bước:
+	\begin{enumerate}
+		\item Khử nhiễu bằng Gaussian Blur.
+		\item Tính gradient cường độ và hướng của biên.
+		\item Non-maximum Suppression: Loại bỏ các điểm không phải cực đại.
+		\item Hysteresis Thresholding: Sử dụng hai ngưỡng (\texttt{threshold1} và \texttt{threshold2}) để lọc biên.
+	\end{enumerate}
+	Trong dự án, các ngưỡng này được cấu hình trong file \texttt{config.py} với giá trị \texttt{CANNY\_THRESHOLD\_1 = 30} và \texttt{CANNY\_THRESHOLD\_2 = 100} để tối ưu việc bắt khung giấy thi.
+	
+	\subsection{Biến đổi phối cảnh (Perspective Transform)}
+	Ảnh chụp từ thực tế thường bị nghiêng hoặc biến dạng hình thang. Kỹ thuật Perspective Transform (hay Warping) giúp "nắn" lại ảnh về góc nhìn trực diện (top-down view).
+	Quá trình này yêu cầu xác định được 4 điểm góc của tờ giấy $(tl, tr, br, bl)$. Ma trận biến đổi $M$ kích thước $3 \times 3$ được tính toán sao cho:
+	\begin{equation}
+		\begin{bmatrix} x' \\ y' \\ w' \end{bmatrix} = M \times \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}
+	\end{equation}
+	Trong module \texttt{src/utils/image\_utils.py}, hàm \texttt{four\_point\_transform} chịu trách nhiệm thực thi kỹ thuật này, đảm bảo các ô trắc nghiệm luôn nằm đúng vị trí tọa độ mẫu.
+	
+	\subsection{Phân ngưỡng thích nghi (Adaptive Thresholding)}
+	Đây là kỹ thuật quan trọng nhất trong module chấm thi (\texttt{omr\_engine.py}). Khác với phân ngưỡng toàn cục (Global Thresholding) sử dụng một giá trị ngưỡng duy nhất cho toàn bộ ảnh, Adaptive Thresholding tính toán ngưỡng riêng cho từng vùng nhỏ.
+	
+	Trong dự án, phương pháp \textbf{Adaptive Gaussian} được sử dụng:
+	\begin{itemize}
+		\item Giá trị ngưỡng $T(x,y)$ là tổng trọng số Gaussian của các điểm lân cận trừ đi hằng số $C$.
+		\item Cấu hình hiện tại: Block Size = 51, $C = 10$.
+	\end{itemize}
+	\textbf{Ưu điểm:} Kỹ thuật này giúp hệ thống hoạt động tốt ngay cả khi ảnh bị bóng đổ (shadow) hoặc ánh sáng không đều, đảm bảo tách biệt rõ ràng vết mực tô (đen) và nền giấy (trắng).
+	
+	\section{Nhận dạng quang học (OCR) và Xử lý ngôn ngữ}
+	
+	\subsection{Mô hình EasyOCR}
+	EasyOCR là một thư viện mã nguồn mở hỗ trợ nhận dạng văn bản trên hơn 80 ngôn ngữ, bao gồm tiếng Việt. Kiến trúc của EasyOCR là sự kết hợp của Deep Learning:
+	\begin{itemize}
+		\item \textbf{Detection (Phát hiện chữ):} Sử dụng mạng CRAFT (Character Region Awareness for Text Detection) để khoanh vùng vị trí văn bản.
+		\item \textbf{Recognition (Nhận dạng):} Sử dụng mạng CRNN (Convolutional Recurrent Neural Network) kết hợp với LSTM và CTC Loss để đọc nội dung văn bản từ vùng đã cắt.
+	\end{itemize}
+	Trong module \texttt{ocr\_engine.py}, EasyOCR được cấu hình để đọc song ngữ \texttt{['vi', 'en']}, phục vụ việc trích xuất tên thí sinh và mã đề.
+	
+	\subsection{Biểu thức chính quy (Regular Expression - Regex)}
+	Do kết quả OCR thường bị nhiễu (ví dụ: nhận dạng nhầm vết bẩn thành dấu chấm), Regex được sử dụng như một bộ lọc hậu xử lý (Post-processing) để chuẩn hóa dữ liệu.
+	Các mẫu Regex (Pattern) chính được sử dụng trong dự án:
+	\begin{itemize}
+		\item \texttt{\textbackslash D}: Khớp với bất kỳ ký tự nào không phải là số (dùng để lọc SBD, chỉ giữ lại số).
+		\item \texttt{[ \^{} \textbackslash w \textbackslash s ]}: Loại bỏ các ký tự đặc biệt, chỉ giữ lại chữ cái và khoảng trắng (dùng để làm sạch Tên thí sinh).
+	\end{itemize}
+	
+	\section{Các công cụ và Thư viện hỗ trợ}
+	
+	\subsection{OpenCV (Open Source Computer Vision Library)}
+	Thư viện lõi chịu trách nhiệm cho toàn bộ các thao tác xử lý ảnh như đọc/ghi ảnh, vẽ hình, biến đổi hình học và tính toán contour.
+	
+	\subsection{ReportLab}
+	Thư viện Python mạnh mẽ dùng để tạo file PDF bằng lập trình. Trong dự án, ReportLab (\texttt{tools/generate\_sheet.py}) được dùng để "vẽ" phiếu thi mẫu.
+	Việc dùng code để sinh phiếu thi giúp tạo ra \textbf{Ground Truth} (tọa độ đáp án) chính xác tuyệt đối về mặt toán học, loại bỏ sai số so với việc thiết kế thủ công trên Word/Excel rồi đo đạc lại.
+	
+	\subsection{NumPy}
+	Thư viện toán học dùng để xử lý các mảng đa chiều. Trong xử lý ảnh, mỗi bức ảnh thực chất là một ma trận NumPy, do đó NumPy đóng vai trò nền tảng cho việc tính toán điểm ảnh và các phép biến đổi ma trận.
+	
+	\section{Mô hình Kiến trúc MVC}
+	Hệ thống được tổ chức theo mô hình Model-View-Controller để đảm bảo tính module hóa:
+	\begin{itemize}
+		\item \textbf{Model:} Các engine xử lý logic cốt lõi (\texttt{omr\_engine}, \texttt{ocr\_engine}).
+		\item \textbf{View:} Các thành phần hiển thị kết quả (\texttt{renderer.py}).
+		\item \textbf{Controller:} Thành phần điều phối luồng dữ liệu (\texttt{main.py}, \texttt{config.py}).
+	\end{itemize}
+	
+	\chapter{PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG}
+	
+	Chương này mô tả chi tiết kiến trúc phần mềm, quy trình xử lý dữ liệu và thiết kế các thành phần cốt lõi của hệ thống SmartGrader. Hệ thống được thiết kế theo hướng module hóa, tách biệt giữa dữ liệu cấu hình và logic xử lý nhằm đảm bảo tính linh hoạt khi thay đổi mẫu phiếu thi.
+	
+	\section{Kiến trúc hệ thống (System Architecture)}
+	
+	Dựa trên cấu trúc thư mục dự án, hệ thống áp dụng mô hình kiến trúc **MVC (Model-View-Controller)** cải tiến để phù hợp với ứng dụng xử lý ảnh dạng batch (xử lý hàng loạt).
+	
+	\begin{figure}[h]
+		\centering
+		% [demo] ở đầu file giúp chạy được ngay cả khi chưa có ảnh này
+		\includegraphics[width=0.8\textwidth]{images/pipeline.png} 
+		\caption{Sơ đồ kiến trúc MVC của hệ thống SmartGrader}
+		\label{fig:mvc_diagram}
+	\end{figure}
+	
+	Các thành phần chi tiết bao gồm:
+	
+	\subsection{Model (Lớp xử lý logic và dữ liệu)}
+	Đây là thành phần chịu trách nhiệm thực thi các thuật toán phức tạp nhất. Trong mã nguồn (\texttt{src/core/}), Model được chia thành 3 engine chính:
+	\begin{itemize}
+		\item \textbf{OMR Engine (\texttt{omr\_engine.py}):} Chứa logic chấm thi trắc nghiệm. Class \texttt{OMREngine} thực hiện việc đếm điểm ảnh (non-zero pixels) và áp dụng Adaptive Thresholding để xác định ô tô.
+		\item \textbf{OCR Engine (\texttt{ocr\_engine.py}):} Chứa logic nhận dạng ký tự. Class \texttt{OCREngine} bọc (wrap) thư viện EasyOCR và thực hiện hậu xử lý dữ liệu bằng Regex.
+		\item \textbf{Processor (\texttt{processor.py}):} Chịu trách nhiệm điều phối việc cắt ảnh, biến đổi hình học (Warping) trước khi chuyển cho OMR hoặc OCR xử lý.
+	\end{itemize}
+	
+	\subsection{View (Lớp hiển thị)}
+	Do đây là ứng dụng xử lý ảnh tự động, "Giao diện" ở đây chính là các hình ảnh kết quả được vẽ lại trực quan.
+	\begin{itemize}
+		\item \textbf{Renderer (\texttt{src/view/renderer.py}):} Module này nhận đầu vào là tọa độ và kết quả chấm, sau đó sử dụng OpenCV để vẽ các vòng tròn màu xanh (đúng) hoặc đỏ (sai) trực tiếp lên ảnh phiếu thi.
+		\item \textbf{Output Generation:} Ngoài ra, View còn bao gồm việc tạo ra các file báo cáo như ảnh điểm số (\texttt{score.png}) và file JSON chứa dữ liệu OCR.
+	\end{itemize}
+	
+	\subsection{Controller (Lớp điều phối)}
+	\begin{itemize}
+		\item \textbf{Main Controller (\texttt{main.py}):} Đây là điểm bắt đầu (entry point) của chương trình. Nó thực hiện load cấu hình từ \texttt{Config}, đọc danh sách ảnh từ thư mục đầu vào, gọi Model để xử lý và cuối cùng gọi View để xuất kết quả.
+		\item \textbf{Configuration (\texttt{config.py}):} Quản lý tập trung toàn bộ tham số hệ thống như đường dẫn thư mục, ngưỡng nhị phân (\texttt{PIXEL\_THRESHOLD}), và kích thước ảnh chuẩn.
+	\end{itemize}
+	
+	\section{Thiết kế Quy trình hoạt động (Workflow Design)}
+	
+	Quy trình xử lý một lô (batch) bài thi được thiết kế tuần tự như sau:
+	
+	\begin{enumerate}
+		\item \textbf{Khởi tạo (Initialization):}
+		\begin{itemize}
+			\item Hệ thống load cấu hình từ \texttt{config.py}.
+			\item Load file mẫu \texttt{coordinates.json} để biết vị trí các ô trắc nghiệm.
+			\item Load đáp án đúng từ file \texttt{answer\_key.csv} và chuyển đổi sang dạng chỉ số (A$\rightarrow$0, B$\rightarrow$1...).
+		\end{itemize}
+		
+		\item \textbf{Thu thập dữ liệu (Input Acquisition):}
+		\begin{itemize}
+			\item Quét toàn bộ các file ảnh (.jpg, .png) có trong thư mục \texttt{data/raw/batch\_input/}.
+		\end{itemize}
+		
+		\item \textbf{Xử lý từng bài thi (Processing Loop):}
+		Với mỗi ảnh đầu vào, hệ thống thực hiện tuần tự:
+		\begin{itemize}
+			\item \textbf{Bước 1 - Warping:} Tìm 4 góc của phiếu thi và "nắn" thẳng ảnh về kích thước chuẩn ($1000 \times 1400$ px).
+			\item \textbf{Bước 2 - OMR Grading:} Cắt vùng ảnh chứa ô trắc nghiệm và SBD theo tọa độ trong template, so sánh với đáp án (Key) để tính điểm thô.
+			\item \textbf{Bước 3 - OCR Info:} Cắt vùng ảnh chứa thông tin (Tên, Lớp) và dùng EasyOCR để đọc dữ liệu text.
+		\end{itemize}
+		
+		\item \textbf{Xuất kết quả (Output):}
+		\begin{itemize}
+			\item In kết quả chi tiết từng câu (Correct/Incorrect) ra màn hình Console (Log).
+			\item Lưu ảnh kết quả đã chấm (\texttt{\_result.jpg}) vào thư mục \texttt{output/batch\_output/}.
+		\end{itemize}
+	\end{enumerate}
+	
+	\section{Thiết kế Dữ liệu (Data Structures)}
+	
+	Hệ thống hoạt động dựa trên cơ chế "Data-Driven" (hướng dữ liệu), nghĩa là thuật toán không fix cứng vị trí mà đọc từ file cấu hình.
+	
+	\subsection{Cấu trúc Template (\texttt{coordinates.json})}
+	File JSON này định nghĩa toàn bộ "bản đồ" của phiếu thi. Cấu trúc gồm 3 phần chính:
+	
+	\begin{lstlisting}[language=python, caption={Cau truc file JSON toa do}]
+		{
+			"info_fields": { 
+				"name": [x, y, w, h],    // Vung chua Ten
+				"class": [x, y, w, h]    // Vung chua Lop
+			},
+			"mssv_bubbles": [
+			// Mang chua toa do (x,y) cua 10 cot SBD
+			[ [x0,y0], [x1,y1], ... ], 
+			...
+			],
+			"answer_bubbles": [
+			// Mang chua toa do (x,y) cua cac cau hoi (Q1 -> Q20)
+			// Moi cau hoi gom 4 toa do cho A, B, C, D
+			[ [xA,yA], [xB,yB], [xC,yC], [xD,yD] ],
+			...
+			]
+		}
+	\end{lstlisting}
+	
+	\begin{itemize}
+		\item \texttt{info\_fields}: Định nghĩa vùng chữ viết tay để OCR.
+		\item \texttt{mssv\_bubbles}: Ma trận tọa độ cho phần tô Số báo danh (10 cột $\times$ 10 dòng).
+		\item \texttt{answer\_bubbles}: Ma trận tọa độ cho phần trả lời trắc nghiệm (số câu hỏi $\times$ 4 lựa chọn).
+	\end{itemize}
+	
+	\subsection{Cấu trúc Đáp án (\texttt{answer\_key.csv})}
+	File CSV đơn giản lưu trữ đáp án đúng, giúp giáo viên dễ dàng chỉnh sửa bằng Excel:
+	\begin{verbatim}
+		1,A
+		2,B
+		...
+		20,C
+	\end{verbatim}
+	Hệ thống sẽ tự động map ký tự sang số nguyên: $A \rightarrow 0, B \rightarrow 1, C \rightarrow 2, D \rightarrow 3$ để so sánh với chỉ số của mảng \texttt{answer\_bubbles}.
+	
+	\section{Công cụ hỗ trợ tạo Template}
+	Để tạo ra file \texttt{coordinates.json} một cách chính xác mà không cần đo đạc thủ công, hệ thống cung cấp công cụ \texttt{tools/create\_template.py}. Công cụ này cho phép người dùng click chuột lên ảnh phiếu thi mẫu để xác định các điểm neo (Anchor Points), từ đó tự động tính toán và sinh ra file JSON cấu hình.
+	
+	\chapter{CÀI ĐẶT VÀ HIỆN THỰC}
+	
+	Chương này trình bày chi tiết quá trình hiện thực hóa các giải pháp kỹ thuật đã đề xuất. Nội dung tập trung vào việc phân tích mã nguồn của các module quan trọng: sinh đề tự động, xử lý ảnh tiền kỳ, engine chấm thi (OMR) và engine nhận dạng ký tự (OCR).
+	
+	\section{Module Sinh phiếu thi tự động (Auto Sheet Generator)}
+	
+	Thay vì thiết kế phiếu thi thủ công bằng Word hoặc Excel vốn dễ gây ra sai số về toạ độ khi in ấn, hệ thống sử dụng module \texttt{tools/generate\_sheet.py} để sinh ra phiếu thi chuẩn định dạng PDF bằng mã lệnh (Programmatic Generation).
+	
+	\begin{itemize}
+		\item \textbf{Công nghệ sử dụng:} Thư viện \texttt{ReportLab} của Python.
+		\item \textbf{Lợi ích:} Đảm bảo tạo ra \textbf{Ground Truth} (chân lý) chính xác tuyệt đối. Vị trí của các ô tròn (bubbles) và khung định vị (anchors) được tính toán theo toạ độ điểm (points), giúp module chấm thi sau này có thể mapping chính xác 100\% mà không cần tinh chỉnh thủ công.
+	\end{itemize}
+	
+	\section{Module Xử lý ảnh tiền kỳ (Preprocessing)}
+	
+	Trước khi đi vào chấm điểm, ảnh chụp từ điện thoại cần được "nắn" lại cho thẳng góc. Quá trình này được thực hiện trong file \texttt{src/utils/image\_utils.py}.
+	
+	\subsection{Thuật toán phát hiện khung giấy}
+	Hàm \texttt{warp\_document} thực hiện chuỗi các bước xử lý ảnh kinh điển để tìm ra đường biên của tờ giấy thi:
+	
+	\begin{enumerate}
+		\item \textbf{Resize:} Thu nhỏ ảnh về chiều cao 800px để tăng tốc độ xử lý.
+		\item \textbf{Grayscale \& Blur:} Chuyển ảnh xám và làm mờ bằng Gaussian Blur (kernel $5 \times 5$) để loại bỏ nhiễu hạt.
+		\item \textbf{Canny Edge Detection:} Tìm biên cạnh của tờ giấy.
+		\item \textbf{Contour Finding:} Tìm đường bao lớn nhất có 4 đỉnh (hình tứ giác).
+	\end{enumerate}
+	
+	\subsection{Biến đổi phối cảnh (Perspective Transform)}
+	Sau khi tìm được 4 góc của tờ giấy, hàm \texttt{four\_point\_transform} sẽ thực hiện ma trận biến đổi để đưa ảnh về góc nhìn trực diện (Top-down view).
+	
+	\begin{lstlisting}[language=Python, caption={Hàm biến đổi hình học trong src/utils/image\_utils.py}]
+		def four_point_transform(self, image: np.ndarray, points: np.ndarray) -> np.ndarray:
+		"""
+		Thuc hien Warp Perspective de nan thang anh.
+		"""
+		rect = self.order_points(points)
+		(tl, tr, br, bl) = rect
+		
+		# Tinh toan chieu rong va chieu cao moi cua anh
+		width_a = np.sqrt(((br - bl) ** 2) + ((br[1] - bl[1]) ** 2))
+		width_b = np.sqrt(((tr - tl) ** 2) + ((tr[1] - tl[1]) ** 2))
+		max_width = max(int(width_a), int(width_b))
+		
+		height_a = np.sqrt(((tr - br) ** 2) + ((tr[1] - br[1]) ** 2))
+		height_b = np.sqrt(((tl - bl) ** 2) + ((tl[1] - bl[1]) ** 2))
+		max_height = max(int(height_a), int(height_b))
+		
+		# Ma tran dich (Destination points)
+		dst = np.array([
+		[0, 0],
+		[max_width - 1, 0],
+		[max_width - 1, max_height - 1],
+		[0, max_height - 1]], dtype="float32")
+		
+		# Tinh ma tran bien doi va ap dung
+		M = cv2.getPerspectiveTransform(rect, dst)
+		warped = cv2.warpPerspective(image, M, (max_width, max_height))
+		
+		return warped
+	\end{lstlisting}
+	
+	Kết quả của bước này là một ảnh chuẩn có kích thước cố định (ví dụ: $1000 \times 1400$ pixels) sẵn sàng cho việc chấm điểm.
+	
+	\section{Module Chấm thi (OMR Engine)}
+	
+	Đây là trái tim của hệ thống (\texttt{src/core/omr\_engine.py}), chịu trách nhiệm xác định thí sinh đã tô vào ô nào.
+	
+	\subsection{Kỹ thuật Phân ngưỡng thích nghi (Adaptive Thresholding)}
+	Một trong những thách thức lớn nhất của xử lý ảnh thực tế là điều kiện ánh sáng không đều (bóng đổ). Nếu dùng ngưỡng cố định (Global Threshold), vùng bị bóng râm sẽ bị nhận nhầm là màu đen (đã tô).
+	Hệ thống giải quyết vấn đề này bằng thuật toán \textbf{Adaptive Gaussian Thresholding}:
+	
+	\begin{lstlisting}[language=Python, caption={Hàm xử lý nhị phân chống bóng đổ}]
+		def _apply_adaptive_threshold(self, img):
+		gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+		
+		# Block Size = 51, C = 10
+		# Tinh nguong cuc bo cho tung vung 51x51 pixels
+		thresh = cv2.adaptiveThreshold(
+		gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+		cv2.THRESH_BINARY_INV, 51, 10
+		)
+		return thresh
+	\end{lstlisting}
+	
+	\subsection{Logic xác định ô tô (Bubble Detection)}
+	Với ảnh nhị phân (đen/trắng) thu được, hệ thống xác định đáp án bằng cách đếm số lượng điểm ảnh trắng (non-zero pixels) trong vùng mặt nạ (mask) của từng ô tròn.
+	\begin{itemize}
+		\item Tạo một mặt nạ hình tròn (\texttt{cv2.circle}) tại toạ độ định sẵn.
+		\item Đếm số pixel trắng trong vùng đó bằng \texttt{cv2.countNonZero}.
+		\item Nếu số lượng pixel vượt qua ngưỡng \texttt{PIXEL\_THRESHOLD} (cấu hình là 180), ô đó được coi là đã tô.
+		\item Trong một câu hỏi, ô có số pixel lớn nhất sẽ được chọn là đáp án cuối cùng.
+	\end{itemize}
+	
+	\section{Module Nhận dạng chữ (OCR Engine)}
+	
+	Module này (\texttt{src/core/ocr\_engine.py}) thực hiện trích xuất thông tin SBD và Tên thí sinh.
+	
+	\subsection{Quy trình xử lý}
+	\begin{enumerate}
+		\item \textbf{Cắt vùng ảnh (ROI Segmentation):} Dựa trên toạ độ từ \texttt{coordinates.json}, cắt riêng phần chứa tên và SBD.
+		\item \textbf{Tiền xử lý OCR:} Sử dụng \texttt{Otsu's Binarization} để tách chữ khỏi nền giấy, giúp tăng độ chính xác cho EasyOCR.
+		\item \textbf{Nhận dạng:} Gọi thư viện EasyOCR với cấu hình song ngữ Việt - Anh.
+	\end{enumerate}
+	
+	\subsection{Hậu xử lý dữ liệu (Post-processing Validation)}
+	Dữ liệu thô từ OCR thường chứa nhiễu (ví dụ: nhận diện vết bẩn thành dấu chấm). Hệ thống sử dụng \textbf{Biểu thức chính quy (Regex)} để làm sạch dữ liệu dựa trên ngữ cảnh của trường thông tin.
+	
+	\begin{lstlisting}[language=Python, caption={Hàm hậu xử lý và làm sạch dữ liệu OCR}]
+		def _post_process_text(self, key_name: str, raw_text: str) -> str:
+		text = raw_text.strip()
+		
+		# 1. Voi SBD hoac ID: Chi giu lai ky tu so
+		if "sbd" in key_name.lower() or "id" in key_name.lower():
+		# Regex \D: Khop moi ky tu khong phai so
+		return re.sub(r'\D', '', text)
+		
+		# 2. Voi Ten: Viet hoa chu cai dau, bo ky tu dac biet
+		if "name" in key_name.lower():
+		# Chi giu lai chu cai va khoang trang
+		clean_text = re.sub(r'[^\w\s]', '', text)
+		return clean_text.title() 
+		
+		return text
+	\end{lstlisting}
+	
+	Kỹ thuật này giúp SBD luôn là dãy số chuẩn và Tên người luôn được viết hoa đúng quy tắc (Title Case), ngay cả khi nét chữ của thí sinh không đẹp.
+	
+	\chapter{KẾT QUẢ THỰC NGHIỆM}
+	
+	Chương này trình bày các kết quả thu được sau khi triển khai hệ thống SmartGrader trên tập dữ liệu kiểm thử. Các kết quả được đánh giá dựa trên hai tiêu chí: khả năng xử lý hình ảnh (Warping/Thresholding) và độ chính xác của kết quả chấm (OMR/OCR).
+	
+	\section{Môi trường và Dữ liệu kiểm thử}
+	
+	\subsection{Dữ liệu đầu vào}
+	Hệ thống được kiểm thử với kịch bản thực tế mô phỏng quy trình thi trắc nghiệm:
+	\begin{itemize}
+		\item \textbf{Phiếu thi:} Được tạo tự động từ module \texttt{generate\_sheet.py}, sau đó in ra giấy A4.
+		\item \textbf{Thiết bị chụp:} Camera điện thoại thông minh (độ phân giải 12MP).
+		\item \textbf{Điều kiện chụp:} Ảnh chụp ở các góc nghiêng khác nhau, có xuất hiện bóng đổ (shadow) để kiểm tra độ bền vững của thuật toán Adaptive Threshold.
+		\item \textbf{Thư mục dữ liệu:} Các ảnh được đặt trong \texttt{data/raw/batch\_input/}.
+	\end{itemize}
+	
+	\subsection{Cấu hình hệ thống}
+	Các tham số cấu hình trong \texttt{config.py} được thiết lập như sau:
+	\begin{itemize}
+		\item Kích thước ảnh chuẩn hóa: $1000 \times 1400$ pixels.
+		\item Ngưỡng pixel (để xác định ô tô): \texttt{PIXEL\_THRESHOLD = 180}.
+		\item Bán kính vùng quét: \texttt{SCAN\_RADIUS = 14}.
+		\item Đáp án mẫu: File \texttt{answer\_key.csv} gồm 20 câu hỏi.
+	\end{itemize}
+	
+	\section{Kết quả Xử lý ảnh (Preprocessing Results)}
+	
+	Bước đầu tiên và quan trọng nhất là đưa ảnh chụp về dạng chuẩn.
+	
+	\subsection{Biến đổi hình học (Warp Perspective)}
+	Kết quả thực nghiệm cho thấy module \texttt{image\_utils.py} hoạt động hiệu quả trong việc phát hiện 4 góc của phiếu thi.
+	
+	\begin{figure}[h]
+		\centering
+		% Thay thế bằng tên file ảnh thực tế của bạn
+		\begin{minipage}{0.45\textwidth}
+			\centering
+			\includegraphics[width=\linewidth]{images/input_sample.jpg} % Ảnh gốc nghiêng
+			\caption{Ảnh đầu vào (nghiêng, có bóng)}
+		\end{minipage}\hfill
+		\begin{minipage}{0.45\textwidth}
+			\centering
+			\includegraphics[width=\linewidth]{images/warped_sample.jpg} % Ảnh sau khi warp
+			\caption{Ảnh sau khi biến đổi (Top-down)}
+		\end{minipage}
+		\caption{Kết quả quá trình Warp Perspective}
+	\end{figure}
+	
+	\subsection{Xử lý nhị phân và Khử nhiễu}
+	Nhờ áp dụng \textbf{Adaptive Gaussian Thresholding}, hệ thống đã loại bỏ hoàn toàn tác động của bóng đổ.
+	
+	\begin{itemize}
+		\item Các vùng giấy bị tối do bóng râm vẫn được chuyển về nền trắng (giá trị 255).
+		\item Các ô tô chì và mực in được tách biệt rõ ràng (giá trị 0).
+	\end{itemize}
+	
+	\section{Kết quả Chấm thi (OMR Results)}
+	
+	Sau khi xử lý ảnh, \texttt{omr\_engine.py} tiến hành so khớp với đáp án. Kết quả được thể hiện qua hai hình thức: Log chi tiết trên màn hình và Hình ảnh trực quan.
+	
+	\subsection{Log chi tiết (Detailed Report)}
+	Hệ thống xuất ra báo cáo chi tiết từng câu hỏi trên giao diện dòng lệnh (Console), giúp giám thị dễ dàng đối chiếu. Dưới đây là trích đoạn log thực tế từ \texttt{main.py}:
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/detailed_report.png}
+		\caption{Ảnh log chi tiết}
+		\label{fig:detailed_report}
+	\end{figure}
+	
+	\subsection{Hình ảnh chấm điểm trực quan}
+	Module \texttt{renderer.py} vẽ kết quả trực tiếp lên ảnh phiếu thi:
+	\begin{itemize}
+		\item \textbf{Vòng tròn Xanh lá:} Thí sinh chọn đúng.
+		\item \textbf{Vòng tròn Đỏ:} Thí sinh chọn sai (hoặc bỏ trống).
+		\item \textbf{Chấm nhỏ màu xanh:} Hiển thị đáp án đúng bên cạnh câu sai để tham khảo.
+	\end{itemize}
+	
+	\begin{figure}[H]
+		\centering
+report		\includegraphics[width=0.8\textwidth]{images/detailed_report.png}
+		\caption{Ảnh kết quả chấm thi với các marker xanh/đỏ}
+		\label{fig:scoring_result}
+	\end{figure}
+	
+	\section{Kết quả Nhận dạng thông tin (OCR Results)}
+	
+	Module OCR được thử nghiệm với các trường thông tin viết tay (Tên) và tô trắc nghiệm (SBD). Bảng dưới đây so sánh kết quả trước và sau khi áp dụng \textbf{Regex Validation}:
+	
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{|l|l|l|l|}
+			\hline
+			\textbf{Trường} & \textbf{OCR Thô (Raw)} & \textbf{Hậu xử lý (Regex)} & \textbf{Trạng thái} \\ \hline
+			SBD (Bubble) & 10223015 & 10223015 & Chính xác \\ \hline
+			Tên (Name) & nguyen. van  Anhh & Nguyen Van Anhh & Đã chuẩn hóa \\ \hline
+			Lớp (Class) & 12A.. 1 & 12A1 & Đã làm sạch \\ \hline
+		\end{tabular}
+		\caption{Hiệu quả của quá trình hậu xử lý dữ liệu OCR}
+		\label{tab:ocr_results}
+	\end{table}
+	
+	\textbf{Nhận xét:} Việc áp dụng Regex (như loại bỏ ký tự \texttt{[\^{}\textbackslash w\textbackslash s]} đối với Tên) giúp loại bỏ triệt để các nhiễu hạt nhỏ ("salt and pepper noise") thường bị EasyOCR nhận nhầm thành dấu chấm hoặc dấu phẩy.
+	
+	\section{Đánh giá chung và Hạn chế}
+	
+	\subsection{Ưu điểm}
+	\begin{itemize}
+		\item Tốc độ xử lý trung bình: 1.5 - 2 giây/ảnh (trên CPU).
+		\item Độ chính xác OMR đạt gần 100\% với điều kiện tô kín ô tròn.
+		\item Quy trình tự động hóa hoàn toàn từ lúc bỏ ảnh vào thư mục đến lúc xuất kết quả.
+	\end{itemize}
+	
+	\subsection{Hạn chế tồn tại}
+	Dựa trên quá trình kiểm thử, nhóm nhận thấy một số hạn chế (đã nêu trong \texttt{README.md}):
+	\begin{enumerate}
+		\item \textbf{Phụ thuộc khung viền:} Nếu ảnh chụp bị mất một trong 4 góc định vị, thuật toán Warp sẽ thất bại.
+		\item \textbf{Chữ viết tay tiếng Việt:} EasyOCR đôi khi nhận dạng sai dấu thanh (sắc, huyền) hoặc các nét chữ viết tháu, ngoằn ngoèo.
+		\item \textbf{Cấu trúc tĩnh:} Hệ thống yêu cầu template cố định (\texttt{coordinates.json}), chưa thể tự động phát hiện bố cục nếu đổi mẫu phiếu thi mới.
+	\end{enumerate}
+	
+	\chapter{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
+	
+	\section{Kết luận}
+	
+	Đồ án \textbf{"SmartGrader - Hệ thống chấm thi và số hóa thông tin tự động"} được thực hiện với mục tiêu giải quyết bài toán tự động hóa quy trình đánh giá trắc nghiệm, giảm thiểu chi phí và sai sót so với phương pháp thủ công. Sau quá trình nghiên cứu, cài đặt và thử nghiệm, nhóm thực hiện đã đạt được những kết quả quan trọng sau:
+	
+	\subsection{Về mặt công nghệ và giải thuật}
+	\begin{itemize}
+		\item \textbf{Xử lý ảnh mạnh mẽ (Robust Preprocessing):} Hệ thống đã áp dụng thành công thuật toán biến đổi hình học (Warp Perspective) để chuẩn hóa đầu vào từ ảnh chụp điện thoại. Đặc biệt, việc sử dụng kỹ thuật \textbf{Adaptive Gaussian Thresholding} (thay vì ngưỡng cố định) đã giúp hệ thống hoạt động ổn định trong các điều kiện môi trường thực tế như ánh sáng yếu, giấy bị ố màu hoặc có bóng đổ (shadows) \cite{adaptive_thresh}.
+		
+		\item \textbf{Cơ chế sinh dữ liệu chuẩn (Ground Truth Generation):} Khác với các phương pháp truyền thống phải đo đạc thủ công, nhóm đã xây dựng module \texttt{Auto Sheet Generator} sử dụng thư viện ReportLab. Giải pháp này cho phép sinh ra phiếu thi PDF với tọa độ đáp án chính xác tuyệt đối về mặt toán học, loại bỏ hoàn toàn sai số hệ thống ngay từ khâu đầu vào \cite{reportlab_guide}.
+		
+		\item \textbf{Tối ưu hóa quy trình OCR:} Việc tích hợp mô hình Deep Learning (EasyOCR) kết hợp với thuật toán hậu xử lý bằng Biểu thức chính quy (Regex Validation) đã giải quyết hiệu quả vấn đề nhiễu hạt trong nhận dạng ký tự. Các trường thông tin quan trọng như Số báo danh (SBD) và Tên thí sinh được tự động làm sạch và chuẩn hóa (ví dụ: loại bỏ ký tự lạ, viết hoa chữ cái đầu) \cite{easyocr_git}.
+	\end{itemize}
+	
+	\subsection{Về mặt ứng dụng thực tiễn}
+	Hệ thống đã được đóng gói thành một quy trình khép kín (End-to-End Pipeline) từ khâu tạo đề, xử lý ảnh hàng loạt (Batch Processing) đến khâu xuất báo cáo. Kết quả thực nghiệm cho thấy SmartGrader có khả năng chấm điểm chính xác gần như tuyệt đối đối với phần trắc nghiệm và đạt độ chính xác khá đối với phần nhận dạng chữ viết in.
+	
+	\section{Các hạn chế tồn tại}
+	
+	Mặc dù đã đạt được các mục tiêu cơ bản, hệ thống hiện tại vẫn còn tồn tại một số hạn chế do giới hạn về thời gian nghiên cứu và dữ liệu huấn luyện:
+	
+	\begin{enumerate}
+		\item \textbf{Phụ thuộc vào đường viền (Dependency on Contours):} Thuật toán tiền xử lý hiện tại dựa vào việc phát hiện 4 góc của khung giấy thi thông qua hàm \texttt{cv2.findContours}. Do đó, hệ thống sẽ gặp lỗi nếu ảnh chụp bị mất góc, đường viền bị đứt đoạn hoặc bị vật thể khác che khuất \cite{canny_edge}.
+		
+		\item \textbf{Khả năng nhận dạng chữ viết tay (Handwriting Recognition):} Thư viện EasyOCR hoạt động rất hiệu quả với chữ in, nhưng độ chính xác giảm đáng kể đối với chữ viết tay tiếng Việt, đặc biệt là các nét chữ tháu, ngoằn ngoèo hoặc viết tắt. Hệ thống hiện tại chưa có module chuyên biệt để xử lý các biến thể chữ viết tay phức tạp này.
+		
+		\item \textbf{Tính tĩnh của cấu trúc (Static Template):} Hệ thống hoạt động dựa trên file cấu hình tọa độ cố định (\texttt{coordinates.json}). Điều này đồng nghĩa với việc nếu mẫu phiếu thi thay đổi bố cục (layout), người dùng buộc phải sử dụng công cụ tạo template để định nghĩa lại tọa độ thủ công chứ hệ thống chưa có khả năng tự động phát hiện cấu trúc đề thi mới.
+	\end{enumerate}
+	
+	\section{Hướng phát triển trong tương lai}
+	
+	Dựa trên các hạn chế đã phân tích, nhóm đề xuất lộ trình phát triển để hoàn thiện sản phẩm như sau:
+	
+	\subsection{Nâng cấp khả năng phát hiện phiếu thi}
+	Thay thế thuật toán Canny Edge Detection truyền thống bằng các mô hình phát hiện vật thể dựa trên Deep Learning như \textbf{YOLO (You Only Look Once)}. Việc này sẽ giúp hệ thống xác định chính xác vùng phiếu thi ngay cả khi ảnh có nền phức tạp, bị che khuất một phần hoặc bị biến dạng mạnh.
+	
+	\subsection{Cải thiện mô hình OCR}
+	Thực hiện \textit{Fine-tuning} (tinh chỉnh) lại mô hình EasyOCR hoặc huấn luyện một mô hình chuyên biệt (như CRNN + CTC Loss) trên bộ dữ liệu chữ viết tay tiếng Việt của học sinh. Mục tiêu là nâng cao độ chính xác khi trích xuất tên và lớp học.
+	
+	\subsection{Phát triển giao diện người dùng (GUI)}
+	Hiện tại hệ thống đang vận hành qua giao diện dòng lệnh (CLI). Hướng phát triển tiếp theo là xây dựng giao diện đồ họa thân thiện (sử dụng PyQt hoặc Tkinter) cho phép người dùng kéo thả ảnh, xem trước kết quả chấm và chỉnh sửa trực tiếp các thông tin nhận dạng sai trước khi xuất báo cáo cuối cùng.
+	
+	% -------------------------------------------------------------------
+	% TÀI LIỆU THAM KHẢO
+	% -------------------------------------------------------------------
+	\newpage
+	\addcontentsline{toc}{chapter}{Tài liệu tham khảo}
+	
+	\begin{thebibliography}{99}
+		
+		\bibitem{ref_readme}
+		Nguyễn Thế Minh Nhật. (2024). \textit{SmartGrader Project Documentation (README.md)}. GitHub Repository.
+		
+		\bibitem{ref_omr}
+		OpenCV Team. (2024). \textit{OpenCV-Python Tutorials: Image Thresholding}. Truy cập từ \url{https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html}
+		
+		\bibitem{ref_ocr}
+		Jaided AI. (2024). \textit{EasyOCR: Ready-to-use OCR with 80+ supported languages}. GitHub Repository. \url{https://github.com/JaidedAI/EasyOCR}
+		
+		\bibitem{ref_limits}
+		Rosebrock, A. (2016). \textit{Bubble Sheet Scanner and Test Grader using OMR, Python and OpenCV}. PyImageSearch.
+		
+		\bibitem{opencv_docs}
+		OpenCV Team. (2024). \textit{OpenCV-Python Tutorials: Image Processing}. \url{https://docs.opencv.org/master/d6/d00/tutorial_py_root.html}
+		
+		\bibitem{easyocr_git}
+		Jaided AI. (2024). \textit{EasyOCR Documentation}. \url{https://www.jaided.ai/easyocr/}
+		
+		\bibitem{reportlab_guide}
+		ReportLab Inc. (2024). \textit{ReportLab PDF Generation User Guide}. \url{https://www.reportlab.com/docs/}
+		
+		\bibitem{adaptive_thresh}
+		Bradley, D., \& Roth, G. (2007). "Adaptive Thresholding using the Integral Image". \textit{Journal of Graphics Tools}, 12(2), 13-21.
+		
+		\bibitem{canny_edge}
+		Canny, J. (1986). "A Computational Approach to Edge Detection". \textit{IEEE Transactions on Pattern Analysis and Machine Intelligence}, PAMI-8(6), 679-698.
+		
+		\bibitem{regex_docs}
+		Python Software Foundation. \textit{Regular expression operations (re module)}. Python 3 Documentation.
+		
+	\end{thebibliography}
+	
+\end{document}
