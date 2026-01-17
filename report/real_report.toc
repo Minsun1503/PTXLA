@@ -42,7 +42,7 @@
 \contentsline {subsection}{\numberline {4.3.2}Logic xác định ô tô (Bubble Detection)}{15}{subsection.4.3.2}%
 \contentsline {section}{\numberline {4.4}Module Nhận dạng chữ (OCR Engine)}{15}{section.4.4}%
 \contentsline {subsection}{\numberline {4.4.1}Quy trình xử lý}{15}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}Hậu xử lý dữ liệu (Post-processing Validation)}{15}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.2}Hậu xử lý dữ liệu bằng Regex (Regular Expression)}{15}{subsection.4.4.2}%
 \contentsline {chapter}{\numberline {5}KẾT QUẢ THỰC NGHIỆM}{17}{chapter.5}%
 \contentsline {section}{\numberline {5.1}Môi trường và Dữ liệu kiểm thử}{17}{section.5.1}%
 \contentsline {subsection}{\numberline {5.1.1}Dữ liệu đầu vào}{17}{subsection.5.1.1}%

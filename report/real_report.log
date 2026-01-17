@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (MiKTeX 24.1) (preloaded format=xelatex 2026.1.13)  14 JAN 2026 19:16
+This is XeTeX, Version 3.141592653-2.6-0.999995 (MiKTeX 24.1) (preloaded format=xelatex 2026.1.13)  17 JAN 2026 08:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -747,7 +747,7 @@ Chương 6.
 [22
 
 ] [23]
-Underfull \hbox (badness 4120) in paragraph at lines 647--648
+Underfull \hbox (badness 4120) in paragraph at lines 652--653
 []\TU/TimesNewRoman(0)/m/n/12 ReportLab Inc. (2024). \TU/TimesNewRoman(0)/m/it/
 12 ReportLab PDF Generation User Guide\TU/TimesNewRoman(0)/m/n/12 . []$[][][][]
 [] [] [] [] [][][] []
@@ -761,13 +761,13 @@ LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-04>
  ***********
 Package rerunfilecheck Info: File `real_report.out' has not changed.
-(rerunfilecheck)             Checksum: 9677F082B2E9F87D66768691AAD6BEBC;15776.
+(rerunfilecheck)             Checksum: 5ECA76AB27329536840303B7320FC36A;15800.
  ) 
 Here is how much of TeX's memory you used:
- 15873 strings out of 409617
- 294553 string characters out of 5770765
+ 15875 strings out of 409617
+ 294597 string characters out of 5770765
  2141191 words of memory out of 5000000
- 37767 multiletter control sequences out of 15000+600000
+ 37769 multiletter control sequences out of 15000+600000
  565921 words of font info for 97 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  79i,8n,93p,483b,1946s stack positions out of 10000i,1000n,20000p,200000b,200000s

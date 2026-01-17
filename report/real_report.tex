@@ -422,37 +422,35 @@
 	
 	\section{Module Nhận dạng chữ (OCR Engine)}
 	
-	Module này (\texttt{src/core/ocr\_engine.py}) thực hiện trích xuất thông tin SBD và Tên thí sinh.
+	Module này (\texttt{src/core/ocr\_engine.py}) tập trung vào nhiệm vụ quan trọng nhất là trích xuất và chuẩn hóa \textbf{Số báo danh (SBD)} của thí sinh. Do đặc thù của thư viện EasyOCR khi xử lý chữ viết tay tiếng Việt còn hạn chế, nhóm tập trung tối ưu hóa việc nhận dạng chuỗi số SBD để đảm bảo định danh chính xác bài thi.
 	
 	\subsection{Quy trình xử lý}
 	\begin{enumerate}
-		\item \textbf{Cắt vùng ảnh (ROI Segmentation):} Dựa trên toạ độ từ \texttt{coordinates.json}, cắt riêng phần chứa tên và SBD.
-		\item \textbf{Tiền xử lý OCR:} Sử dụng \texttt{Otsu's Binarization} để tách chữ khỏi nền giấy, giúp tăng độ chính xác cho EasyOCR.
-		\item \textbf{Nhận dạng:} Gọi thư viện EasyOCR với cấu hình song ngữ Việt - Anh.
+		\item \textbf{Cắt vùng ảnh (ROI Segmentation):} Dựa trên toạ độ vùng SBD được định nghĩa trong \texttt{coordinates.json}, hệ thống cắt vùng ảnh chứa số báo danh.
+		\item \textbf{Tiền xử lý OCR:} Sử dụng \texttt{Otsu's Binarization} kết hợp với việc chuyển đổi ảnh xám để làm nổi bật các chữ số trên nền giấy.
+		\item \textbf{Nhận dạng:} Gọi thư viện EasyOCR để đọc dữ liệu thô từ vùng ảnh.
 	\end{enumerate}
 	
-	\subsection{Hậu xử lý dữ liệu (Post-processing Validation)}
-	Dữ liệu thô từ OCR thường chứa nhiễu (ví dụ: nhận diện vết bẩn thành dấu chấm). Hệ thống sử dụng \textbf{Biểu thức chính quy (Regex)} để làm sạch dữ liệu dựa trên ngữ cảnh của trường thông tin.
+	\subsection{Hậu xử lý dữ liệu bằng Regex (Regular Expression)}
+	Dữ liệu thô (Raw Text) từ OCR thường chứa nhiều nhiễu. Ví dụ: số "1" bị đọc nhầm thành chữ "l" hoặc "|", số "0" bị đọc thành chữ "O", hoặc xuất hiện các ký tự rác như dấu chấm, phẩy.
 	
-	\begin{lstlisting}[language=Python, caption={Hàm hậu xử lý và làm sạch dữ liệu OCR}]
+	Để khắc phục, hệ thống áp dụng bộ lọc Regex nghiêm ngặt chỉ giữ lại các ký tự số:
+	
+	\begin{lstlisting}[language=Python, caption={Hàm làm sạch Số báo danh bằng Regex}]
 		def _post_process_text(self, key_name: str, raw_text: str) -> str:
 		text = raw_text.strip()
 		
-		# 1. Voi SBD hoac ID: Chi giu lai ky tu so
-		if "sbd" in key_name.lower() or "id" in key_name.lower():
-		# Regex \D: Khop moi ky tu khong phai so
-		return re.sub(r'\D', '', text)
-		
-		# 2. Voi Ten: Viet hoa chu cai dau, bo ky tu dac biet
-		if "name" in key_name.lower():
-		# Chi giu lai chu cai va khoang trang
-		clean_text = re.sub(r'[^\w\s]', '', text)
-		return clean_text.title() 
+		# Chi xu ly truong SBD (So Bao Danh)
+		if "sbd" in key_name.lower():
+		# Regex \D: Khop moi ky tu KHONG phai la so
+		# Thay the ky tu rac bang chuoi rong
+		clean_text = re.sub(r'\D', '', text)
+		return clean_text
 		
 		return text
 	\end{lstlisting}
 	
-	Kỹ thuật này giúp SBD luôn là dãy số chuẩn và Tên người luôn được viết hoa đúng quy tắc (Title Case), ngay cả khi nét chữ của thí sinh không đẹp.
+	Kỹ thuật này đảm bảo kết quả cuối cùng của SBD luôn là một chuỗi số sạch, loại bỏ hoàn toàn các ký tự gây nhiễu.
 	
 	\chapter{KẾT QUẢ THỰC NGHIỆM}
 	
@@ -540,23 +538,30 @@
 	
 	\section{Kết quả Nhận dạng thông tin (OCR Results)}
 	
-	Module OCR được thử nghiệm với các trường thông tin viết tay (Tên) và tô trắc nghiệm (SBD). Bảng dưới đây so sánh kết quả trước và sau khi áp dụng \textbf{Regex Validation}:
+	Module OCR được kiểm thử tập trung vào khả năng trích xuất Số báo danh (SBD). Kết quả thực nghiệm cho thấy vai trò quyết định của bước hậu xử lý (Post-processing) bằng Regex.
+	
+	Trong nhiều trường hợp, EasyOCR trả về kết quả có lẫn ký tự lạ do vết bẩn trên giấy hoặc nét chữ không rõ ràng. Tuy nhiên, sau khi qua lớp lọc Regex, hệ thống chỉ giữ lại các con số, đưa ra SBD chính xác.
 	
 	\begin{table}[h]
 		\centering
-		\begin{tabular}{|l|l|l|l|}
+		\begin{tabular}{|l|l|l|}
 			\hline
-			\textbf{Trường} & \textbf{OCR Thô (Raw)} & \textbf{Hậu xử lý (Regex)} & \textbf{Trạng thái} \\ \hline
-			SBD (Bubble) & 10223015 & 10223015 & Chính xác \\ \hline
-			Tên (Name) & nguyen. van  Anhh & Nguyen Van Anhh & Đã chuẩn hóa \\ \hline
-			Lớp (Class) & 12A.. 1 & 12A1 & Đã làm sạch \\ \hline
+			\textbf{Case Thử nghiệm} & \textbf{Kết quả Log (Sau Regex)} & \textbf{Đánh giá} \\ \hline
+			Case 0 (Ảnh chuẩn) & + SBD: 150320 & \textbf{Chính xác} \\ \hline
+			Case 1 (Ảnh chụp) & + SBD: 225401 & \textbf{Chính xác} \\ \hline
+			Case 2 (Bóng đổ) & + SBD: 150320 & \textbf{Chính xác} \\ \hline
+			Case 3 (Nghiêng) & + SBD: 3621?? & Không nhận đủ số (Do góc nghiêng) \\ \hline
+			Case 5 (Dấu tích) & + SBD: ?32??? & Lỗi do viết tay/tô không chuẩn \\ \hline
 		\end{tabular}
-		\caption{Hiệu quả của quá trình hậu xử lý dữ liệu OCR}
+		\caption{Kết quả trích xuất SBD trên các tập dữ liệu thử nghiệm}
 		\label{tab:ocr_results}
 	\end{table}
 	
-	\textbf{Nhận xét:} Việc áp dụng Regex (như loại bỏ ký tự \texttt{[\^{}\textbackslash w\textbackslash s]} đối với Tên) giúp loại bỏ triệt để các nhiễu hạt nhỏ ("salt and pepper noise") thường bị EasyOCR nhận nhầm thành dấu chấm hoặc dấu phẩy.
-	
+	\textbf{Nhận xét:} 
+	\begin{itemize}
+		\item Đối với các ảnh có chất lượng tốt và trung bình (Case 0, 1, 2), hệ thống trích xuất SBD hoàn toàn chính xác.
+		\item Đối với các trường hợp ảnh bị nghiêng quá nhiều (Case 3) hoặc thí sinh viết/tô không theo quy chuẩn (Case 5), OCR gặp khó khăn trong việc nhận diện đầy đủ các chữ số. Đây là hạn chế đã được dự báo trước của thư viện EasyOCR đối với dữ liệu chữ viết tay phức tạp.
+	\end{itemize}
 	\section{Đánh giá chung và Hạn chế}
 	
 	\subsection{Ưu điểm}
@@ -599,7 +604,7 @@
 	\begin{enumerate}
 		\item \textbf{Phụ thuộc vào đường viền (Dependency on Contours):} Thuật toán tiền xử lý hiện tại dựa vào việc phát hiện 4 góc của khung giấy thi thông qua hàm \texttt{cv2.findContours}. Do đó, hệ thống sẽ gặp lỗi nếu ảnh chụp bị mất góc, đường viền bị đứt đoạn hoặc bị vật thể khác che khuất \cite{canny_edge}.
 		
-		\item \textbf{Khả năng nhận dạng chữ viết tay (Handwriting Recognition):} Thư viện EasyOCR hoạt động rất hiệu quả với chữ in, nhưng độ chính xác giảm đáng kể đối với chữ viết tay tiếng Việt, đặc biệt là các nét chữ tháu, ngoằn ngoèo hoặc viết tắt. Hệ thống hiện tại chưa có module chuyên biệt để xử lý các biến thể chữ viết tay phức tạp này.
+		\item \textbf{Giới hạn của module OCR:} Hiện tại hệ thống chỉ tập trung xử lý tốt trường thông tin \textbf{Số báo danh} (dạng số). Khả năng nhận dạng chữ viết tay tiếng Việt (như Họ tên, Lớp) chưa được đưa vào báo cáo chính thức do độ chính xác của model EasyOCR gốc trên các dữ liệu này chưa đạt yêu cầu thực tế (thường xuyên bị lỗi dấu tiếng Việt và nhầm lẫn ký tự).
 		
 		\item \textbf{Tính tĩnh của cấu trúc (Static Template):} Hệ thống hoạt động dựa trên file cấu hình tọa độ cố định (\texttt{coordinates.json}). Điều này đồng nghĩa với việc nếu mẫu phiếu thi thay đổi bố cục (layout), người dùng buộc phải sử dụng công cụ tạo template để định nghĩa lại tọa độ thủ công chứ hệ thống chưa có khả năng tự động phát hiện cấu trúc đề thi mới.
 	\end{enumerate}
