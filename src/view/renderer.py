@@ -30,7 +30,7 @@ def draw_results_on_image(
             cv2.circle(display_image, (cx, cy), omr_cfg.SCAN_RADIUS + 3, color, 2)
         else:
             # Nếu bỏ trống, dùng tọa độ ô đầu tiên để đặt dấu "?" [5]
-            cx, cy = q_bubbles
+            cx, cy = q_bubbles[0]
             cv2.putText(display_image, "?", (cx - 15, cy + 7), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 

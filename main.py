@@ -98,7 +98,7 @@ def main():
             )
 
             # --- LƯU KẾT QUẢ THEO ĐÚNG CẤU HÌNH BÁO CÁO ---
-            base_name = os.path.splitext(img_name)
+            base_name = os.path.splitext(img_name)[0]
             
             # Lưu ảnh phiếu thi đã chấm (scoring_result.png)
             res_name = f"{base_name}_{cfg.Paths.SCORING_RESULT_IMAGE_NAME}"

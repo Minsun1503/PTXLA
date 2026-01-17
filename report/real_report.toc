@@ -54,8 +54,8 @@
 \contentsline {subsection}{\numberline {5.3.1}Log chi tiết (Detailed Report)}{18}{subsection.5.3.1}%
 \contentsline {subsection}{\numberline {5.3.2}Hình ảnh chấm điểm trực quan}{19}{subsection.5.3.2}%
 \contentsline {section}{\numberline {5.4}Kết quả Nhận dạng thông tin (OCR Results)}{20}{section.5.4}%
-\contentsline {section}{\numberline {5.5}Đánh giá chung và Hạn chế}{20}{section.5.5}%
-\contentsline {subsection}{\numberline {5.5.1}Ưu điểm}{20}{subsection.5.5.1}%
+\contentsline {section}{\numberline {5.5}Đánh giá chung và Hạn chế}{21}{section.5.5}%
+\contentsline {subsection}{\numberline {5.5.1}Ưu điểm}{21}{subsection.5.5.1}%
 \contentsline {subsection}{\numberline {5.5.2}Hạn chế tồn tại}{21}{subsection.5.5.2}%
 \contentsline {chapter}{\numberline {6}KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}{22}{chapter.6}%
 \contentsline {section}{\numberline {6.1}Kết luận}{22}{section.6.1}%
