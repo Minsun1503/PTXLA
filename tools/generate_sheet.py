@@ -143,6 +143,34 @@ def generate_exam_sheet(output_pdf_path, output_json_path):
     c.setFont("Helvetica-Bold", 10)
     c.drawCentredString(A4_WIDTH/2, mssv_start_y + 40, "Student ID")
     
+    # --- [CHÈN ĐOẠN NÀY VÀO] ---
+    # Tự động tính toán vùng viết tay SBD để lưu vào JSON
+    # Vùng này bao trùm các ô vuông nhỏ dùng để viết số
+    
+    # Tính toán tọa độ hộp bao (Bounding Box)
+    # X: Bắt đầu từ cột đầu tiên, trừ lề một chút
+    box_sbd_x = mssv_start_x - 8 
+    # Y: Vị trí của các ô vuông nhỏ (bạn thấy code dưới có mssv_start_y + 10)
+    # Trong ReportLab Y tính từ dưới lên.
+    # Chiều cao ô vuông là 16.
+    box_sbd_y = mssv_start_y + 10 
+    
+    box_sbd_w = (mssv_digits * col_gap) # Rộng bằng tổng các cột
+    box_sbd_h = 16 # Cao bằng ô vuông nhỏ
+    
+    # Lưu vào coordinates_data để Processor dùng sau này
+    # Hàm to_opencv_rect sẽ chuyển đổi hệ tọa độ PDF sang Pixel ảnh
+    if "info_fields" not in coordinates_data:
+        coordinates_data["info_fields"] = {}
+        
+    coordinates_data["info_fields"]["sbd"] = to_opencv_rect(
+        box_sbd_x, 
+        box_sbd_y, 
+        box_sbd_w, 
+        box_sbd_h
+    )
+    # ---------------------------
+    
     rect_top = mssv_start_y + 30
     rect_bottom = mssv_start_y - (9*row_gap) - 15
     rect_height = rect_top - rect_bottom

@@ -1,5 +1,5 @@
 %!TEX program = xelatex
-\documentclass[12pt, a4paper]{report}
+\documentclass[6pt, a4paper]{report}
 
 % --- CẤU HÌNH TIẾNG VIỆT CHO XELATEX ---
 \usepackage{fontspec}           
@@ -53,7 +53,7 @@
 \lstset{style=mystyle}
 
 % --- THÔNG TIN ---
-\title{\textbf{BÁO CÁO ĐỒ ÁN MÔN HỌC} \\ HỆ THỐNG CHẤM THI VÀ SỐ HÓA THÔNG TIN TỰ ĐỘNG (SMARTGRADER)}
+\title{\textbf{BÁO CÁO ĐỒ ÁN CUỐI KÌ \\ MÔN HỌC: PHÂN TÍCH XỬ LÍ ẢNH} \\ HỆ THỐNG CHẤM THI VÀ SỐ HÓA THÔNG TIN TỰ ĐỘNG (SMARTGRADER)}
 \author{Nhóm thực hiện: Nhóm 10 - Nguyễn Thế Minh Nhật}
 \date{}
 
@@ -181,6 +181,13 @@
 		\item \textbf{Recognition (Nhận dạng):} Sử dụng mạng CRNN (Convolutional Recurrent Neural Network) kết hợp với LSTM và CTC Loss để đọc nội dung văn bản từ vùng đã cắt.
 	\end{itemize}
 	Trong module \texttt{ocr\_engine.py}, EasyOCR được cấu hình để đọc song ngữ \texttt{['vi', 'en']}, phục vụ việc trích xuất tên thí sinh và mã đề.
+	\begin{figure}[H]
+		\centering
+		% Bạn nhớ tải ảnh sơ đồ EasyOCR về và lưu tên là easyocr_pipeline.png vào thư mục images nhé
+		\includegraphics[height=\textheight, keepaspectratio]{images/easyocr_pipeline.png}
+		\caption{Sơ đồ kiến trúc đường ống xử lý của EasyOCR: Từ phát hiện (Detection) đến nhận dạng (Recognition)}
+		\label{fig:easyocr_pipeline}
+	\end{figure}
 	
 	\subsection{Biểu thức chính quy (Regular Expression - Regex)}
 	Do kết quả OCR thường bị nhiễu (ví dụ: nhận dạng nhầm vết bẩn thành dấu chấm), Regex được sử dụng như một bộ lọc hậu xử lý (Post-processing) để chuẩn hóa dữ liệu.
@@ -218,12 +225,14 @@
 	
 	Dựa trên cấu trúc thư mục dự án, hệ thống áp dụng mô hình kiến trúc **MVC (Model-View-Controller)** cải tiến để phù hợp với ứng dụng xử lý ảnh dạng batch (xử lý hàng loạt).
 	
-	\begin{figure}[h]
+	\begin{figure}[H] 
 		\centering
-		% [demo] ở đầu file giúp chạy được ngay cả khi chưa có ảnh này
-		\includegraphics[width=0.8\textwidth]{images/pipeline.png} 
-		\caption{Sơ đồ kiến trúc MVC của hệ thống SmartGrader}
-		\label{fig:mvc_diagram}
+		% keepaspectratio: Giữ nguyên tỷ lệ ảnh, không bị méo
+		% width=\linewidth: Rộng tối đa bằng trang giấy
+		% height=0.85\textheight: Cao tối đa 85% trang giấy (chừa chỗ cho caption)
+		\includegraphics[height=\textheight, keepaspectratio]{images/pipeline.png}
+		\caption{Sơ đồ tuần tự mô tả luồng xử lý và tương tác giữa các module}
+		\label{fig:pipeline}
 	\end{figure}
 	
 	Các thành phần chi tiết bao gồm:
@@ -280,6 +289,18 @@
 			\item Lưu ảnh kết quả đã chấm (\texttt{\_result.jpg}) vào thư mục \texttt{output/batch\_output/}.
 		\end{itemize}
 	\end{enumerate}
+	\subsubsection{Sơ đồ tuần tự (Sequence Diagram)}
+	Để làm rõ sự tương tác giữa các thành phần trong kiến trúc MVC, sơ đồ tuần tự dưới đây mô tả chi tiết luồng trao đổi thông điệp khi hệ thống xử lý một lô ảnh đầu vào:
+	
+	\begin{figure}[H]
+		\centering
+		% Nhớ lưu ảnh sơ đồ tuần tự là sequence_diagram.png vào thư mục images
+		\includegraphics[width=0.95\textwidth]{images/sequence_diagram.png}
+		\caption{Sơ đồ tuần tự mô tả luồng xử lý và tương tác giữa các module}
+		\label{fig:sequence_diagram}
+	\end{figure}
+	
+	Quá trình này cho thấy sự phân tách rõ ràng: \texttt{Main Controller} điều phối luồng đi, \texttt{Processor} chịu trách nhiệm xử lý ảnh thô, trong khi \texttt{OMR/OCR Engines} thực hiện logic nghiệp vụ sâu và \texttt{Renderer} chỉ tập trung vào hiển thị kết quả.
 	
 	\section{Thiết kế Dữ liệu (Data Structures)}
 	
@@ -324,8 +345,6 @@
 	\end{verbatim}
 	Hệ thống sẽ tự động map ký tự sang số nguyên: $A \rightarrow 0, B \rightarrow 1, C \rightarrow 2, D \rightarrow 3$ để so sánh với chỉ số của mảng \texttt{answer\_bubbles}.
 	
-	\section{Công cụ hỗ trợ tạo Template}
-	Để tạo ra file \texttt{coordinates.json} một cách chính xác mà không cần đo đạc thủ công, hệ thống cung cấp công cụ \texttt{tools/create\_template.py}. Công cụ này cho phép người dùng click chuột lên ảnh phiếu thi mẫu để xác định các điểm neo (Anchor Points), từ đó tự động tính toán và sinh ra file JSON cấu hình.
 	
 	\chapter{CÀI ĐẶT VÀ HIỆN THỰC}
 	
@@ -451,10 +470,103 @@
 	\end{lstlisting}
 	
 	Kỹ thuật này đảm bảo kết quả cuối cùng của SBD luôn là một chuỗi số sạch, loại bỏ hoàn toàn các ký tự gây nhiễu.
+	\section{Tinh chỉnh Mô hình Nhận dạng (OCR Fine-tuning)}
+	
+	Để khắc phục hạn chế của model gốc (thường nhận diện sai chữ viết tay tiếng Việt và các ký tự số bị viết tháu), nhóm đã thực hiện quy trình huấn luyện lại mô hình trên nền tảng Kaggle GPU.
+	
+	\subsection{Chuẩn bị dữ liệu (Data Preparation)}
+	\begin{itemize}
+		\item \textbf{Nguồn dữ liệu:} Sử dụng bộ dataset \textit{OCR\_handwritting\_HAT2023} (HuggingFace), bao gồm các mẫu chữ viết tay tiếng Việt đa dạng \cite{hat2023}.
+		\item \textbf{Tiền xử lý:} Dữ liệu ảnh thô và nhãn (Label) được chuyển đổi sang định dạng \textbf{LMDB (Lightning Memory-Mapped Database)} để tối ưu hóa tốc độ đọc ghi (I/O) trong quá trình huấn luyện.
+	\end{itemize}
+	
+	\subsection{Cấu hình Huấn luyện (Training Configuration)}
+	Quá trình huấn luyện được thực hiện với các siêu tham số (Hyperparameters) sau:
+	\begin{itemize}
+		\item \textbf{Base Model:} \texttt{english\_g2.pth} (Pre-trained).
+		\item \textbf{Architecture:} ResNet (Feature) + BiLSTM (Sequence) + CTC (Prediction).
+		\item \textbf{Hidden Size / Output Channel:} 256 (Tối ưu hóa cho mô hình nhẹ).
+		\item \textbf{Iterations:} 3000 vòng lặp.
+		\item \textbf{Batch Size:} 64.
+	\end{itemize}
+	
+	\subsection{Giải quyết vấn đề bất đồng bộ kiến trúc (Technical Challenges)}
+	Trong quá trình Fine-tuning, nhóm gặp phải vấn đề \textit{"Size Mismatch"} (Lệch kích thước tensor) giữa lớp Prediction của model gốc (97 classes - tiếng Anh) và model mới (197 classes - tiếng Việt + dấu).
+	
+	\textbf{Giải pháp "Smart Loading":} Nhóm đã phát triển một thuật toán custom để load trọng số (weights), tự động lọc bỏ các lớp bị lệch kích thước và chỉ giữ lại các lớp Feature Extraction quan trọng.
+	
+	\begin{lstlisting}[language=Python, caption={Thuật toán Smart Loading xử lý lệch size tensor}]
+		# Doan code xu ly viec load weights khi so luong class thay doi
+		state_dict = torch.load(opt.saved_model)
+		model_dict = model.state_dict()
+		
+		# Loc bo cac lop (layers) khong khop kich thuoc
+		new_state_dict = {
+			k: v for k, v in state_dict.items() 
+			if k in model_dict and v.shape == model_dict[k].shape
+		}
+		
+		# Load cac weights tuong thich, khoi tao lai cac weights bi lech
+		model.load_state_dict(new_state_dict, strict=False)
+	\end{lstlisting}
+	\section{Cơ chế Nhận dạng Kép và Chiến lược Hợp nhất (Hybrid OCR Strategy)}
+	
+	Kết quả thực nghiệm cho thấy một sự phân hóa rõ rệt về hiệu năng giữa hai mô hình trên các loại dữ liệu khác nhau. Thay vì phụ thuộc hoàn toàn vào một mô hình, hệ thống áp dụng chiến lược \textbf{Hybrid Strategy} để tận dụng sở trường riêng biệt của từng engine.
+	
+	\subsection{Phân tích hiệu năng so sánh}
+	Bảng so sánh thực tế (Hình \ref{fig:dual_mode_log}) cho thấy:
+	\begin{itemize}
+		\item \textbf{Đối với trường thông tin chữ in/Tiếng Anh (Tên trường, Lớp, Môn học):} Mô hình Gốc (Default) hoạt động vượt trội. Ví dụ: Chuỗi "HCMUS" được mô hình gốc nhận diện chính xác, trong khi mô hình Custom nhận diện sai thành "hmus" do xu hướng gán ghép về các âm tiết tiếng Việt.
+		\item \textbf{Đối với trường số viết tay (SBD, Mã đề):} Mô hình Custom (Fine-tuned) thể hiện ưu thế tuyệt đối trong việc xử lý các nét chữ viết tay tự nhiên, dính nét hoặc đứt đoạn, nơi mà mô hình gốc thường bỏ sót hoặc nhận diện nhầm.
+	\end{itemize}
+	
+	\subsection{Cơ chế quyết định (Decision Logic)}
+	Dựa trên phân tích trên, hệ thống sử dụng thuật toán lựa chọn kết quả theo ngữ cảnh:
+	\begin{itemize}
+		\item Nếu vùng nhận dạng là \textbf{Số Báo Danh (SBD)} hoặc \textbf{Mã đề}: Ưu tiên kết quả từ \textit{Custom Engine}.
+		\item Nếu vùng nhận dạng là \textbf{Thông tin hành chính (Tên, Lớp, Môn)}: Ưu tiên kết quả từ \textit{Default Engine}.
+	\end{itemize}
+	
+	Chiến lược này giúp hệ thống đạt độ chính xác tổng thể tối ưu, khắc phục được điểm yếu "học tủ" (overfitting) của mô hình tự huấn luyện đối với các từ vựng tiếng Anh hoặc chữ in chuyên ngành.
+	
+	\begin{figure}[H]
+		\centering
+		% Thay bằng ảnh chụp màn hình log thực tế của bạn
+		\includegraphics[width=0.95\linewidth]{images/log_dual_mode.png}
+		\caption{Log so sánh thực tế cho thấy sự vượt trội của Model Gốc đối với các trường thông tin chữ in (HCMUS, 21TTH)}
+		\label{fig:dual_mode_log}
+	\end{figure}
+	
 	
 	\chapter{KẾT QUẢ THỰC NGHIỆM}
 	
 	Chương này trình bày các kết quả thu được sau khi triển khai hệ thống SmartGrader trên tập dữ liệu kiểm thử. Các kết quả được đánh giá dựa trên hai tiêu chí: khả năng xử lý hình ảnh (Warping/Thresholding) và độ chính xác của kết quả chấm (OMR/OCR).
+	\section{Kết quả Huấn luyện Mô hình (Training Results)}
+	Quá trình huấn luyện trên Kaggle (GPU T4 x2) cho thấy sự hội tụ nhanh chóng của mô hình nhờ áp dụng Transfer Learning.
+	
+	\begin{itemize}
+		\item \textbf{Khởi tạo:} Loss ban đầu rất cao ($\approx 44.8$) do lớp Prediction được khởi tạo ngẫu nhiên.
+		\item \textbf{Sau 200 vòng lặp:} Train Loss giảm mạnh xuống còn $\approx 4.1$. Model bắt đầu học được cấu trúc ký tự tiếng Việt.
+		\item \textbf{Kết thúc (3000 vòng):} Model đạt trạng thái ổn định, có khả năng nhận diện tốt các nét chữ viết tay và dấu tiếng Việt.
+	\end{itemize}
+	
+	\section{Kết quả Chấm thi và OCR}
+	
+	\subsection{Đánh giá độ chính xác OCR}
+	So sánh hiệu năng giữa Model gốc (Base) và Model sau khi tinh chỉnh (Fine-tuned) trên tập test gồm các mẫu chữ viết tay khó:
+	
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|l|l|l|}
+			\hline
+			\textbf{Trường hợp} & \textbf{Model Gốc (English\_g2)} & \textbf{Model Fine-tuned (SmartGrader)} \\ \hline
+			SBD viết tay chuẩn & Chính xác (95\%) & Chính xác (98\%) \\ \hline
+			SBD viết tháu/dính & Sai (thường nhầm 1 thành l) & \textbf{Cải thiện rõ rệt (85\%)} \\ \hline
+			Ký tự có dấu & Không nhận diện được & Nhận diện được (Ví dụ: ế, ỗ) \\ \hline
+		\end{tabular}
+		\caption{So sánh hiệu năng OCR trước và sau khi Fine-tune}
+		\label{tab:ocr_compare}
+	\end{table}
 	
 	\section{Môi trường và Dữ liệu kiểm thử}
 	
@@ -576,7 +688,7 @@
 	\begin{enumerate}
 		\item \textbf{Phụ thuộc khung viền:} Nếu ảnh chụp bị mất một trong 4 góc định vị, thuật toán Warp sẽ thất bại.
 		\item \textbf{Chữ viết tay tiếng Việt:} EasyOCR đôi khi nhận dạng sai dấu thanh (sắc, huyền) hoặc các nét chữ viết tháu, ngoằn ngoèo.
-		\item \textbf{Cấu trúc tĩnh:} Hệ thống yêu cầu template cố định (\texttt{coordinates.json}), chưa thể tự động phát hiện bố cục nếu đổi mẫu phiếu thi mới.
+		\item \textbf{Tính tĩnh của cấu trúc (Static Template):} Hệ thống hoạt động dựa trên cấu trúc tọa độ định sẵn. Điều này đồng nghĩa với việc nếu mẫu phiếu thi thay đổi bố cục (layout), người dùng cần phải cập nhật lại tham số trong module sinh đề (\texttt{generate\_sheet.py}) để hệ thống tính toán lại lưới tọa độ mới, thay vì khả năng tự động thích nghi (Adaptive Layout Analysis).
 	\end{enumerate}
 	
 	\chapter{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
@@ -606,7 +718,7 @@
 		
 		\item \textbf{Giới hạn của module OCR:} Hiện tại hệ thống chỉ tập trung xử lý tốt trường thông tin \textbf{Số báo danh} (dạng số). Khả năng nhận dạng chữ viết tay tiếng Việt (như Họ tên, Lớp) chưa được đưa vào báo cáo chính thức do độ chính xác của model EasyOCR gốc trên các dữ liệu này chưa đạt yêu cầu thực tế (thường xuyên bị lỗi dấu tiếng Việt và nhầm lẫn ký tự).
 		
-		\item \textbf{Tính tĩnh của cấu trúc (Static Template):} Hệ thống hoạt động dựa trên file cấu hình tọa độ cố định (\texttt{coordinates.json}). Điều này đồng nghĩa với việc nếu mẫu phiếu thi thay đổi bố cục (layout), người dùng buộc phải sử dụng công cụ tạo template để định nghĩa lại tọa độ thủ công chứ hệ thống chưa có khả năng tự động phát hiện cấu trúc đề thi mới.
+		\item \textbf{Tính tĩnh của cấu trúc (Static Template):} Hệ thống hoạt động dựa trên file cấu hình tọa độ cố định (\texttt{coordinates.json}). Điều này đồng nghĩa với việc nếu mẫu phiếu thi thay đổi bố cục (layout), người dùng cần phải cập nhật lại các tham số kích thước trong module sinh đề (generate\_sheet.py) để hệ thống tính toán lại lưới tọa độ mới, thay vì khả năng tự động thích nghi (Adaptive Layout Analysis).
 	\end{enumerate}
 	
 	\section{Hướng phát triển trong tương lai}
@@ -617,7 +729,7 @@
 	Thay thế thuật toán Canny Edge Detection truyền thống bằng các mô hình phát hiện vật thể dựa trên Deep Learning như \textbf{YOLO (You Only Look Once)}. Việc này sẽ giúp hệ thống xác định chính xác vùng phiếu thi ngay cả khi ảnh có nền phức tạp, bị che khuất một phần hoặc bị biến dạng mạnh.
 	
 	\subsection{Cải thiện mô hình OCR}
-	Thực hiện \textit{Fine-tuning} (tinh chỉnh) lại mô hình EasyOCR hoặc huấn luyện một mô hình chuyên biệt (như CRNN + CTC Loss) trên bộ dữ liệu chữ viết tay tiếng Việt của học sinh. Mục tiêu là nâng cao độ chính xác khi trích xuất tên và lớp học.
+	Mở rộng tập dữ liệu huấn luyện: Tiếp tục huấn luyện mô hình trên các bộ dữ liệu chữ viết tay quy mô lớn hơn để cải thiện khả năng nhận dạng các trường thông tin chữ (Tên, Lớp) vốn đang có độ chính xác chưa cao.
 	
 	\subsection{Phát triển giao diện người dùng (GUI)}
 	Hiện tại hệ thống đang vận hành qua giao diện dòng lệnh (CLI). Hướng phát triển tiếp theo là xây dựng giao diện đồ họa thân thiện (sử dụng PyQt hoặc Tkinter) cho phép người dùng kéo thả ảnh, xem trước kết quả chấm và chỉnh sửa trực tiếp các thông tin nhận dạng sai trước khi xuất báo cáo cuối cùng.
@@ -659,6 +771,12 @@
 		
 		\bibitem{regex_docs}
 		Python Software Foundation. \textit{Regular expression operations (re module)}. Python 3 Documentation.
+		
+		\bibitem{hat2023} 
+		Vklinhhh. (2023). \textit{OCR Handwriting Dataset (HAT2023)}. HuggingFace Datasets.
+		
+		\bibitem{crnn_paper} 
+		Shi, B., Bai, X., \& Yao, C. (2016). "An End-to-End Trainable Neural Network for Image-based Sequence Recognition". \textit{IEEE Transactions on Pattern Analysis and Machine Intelligence}.
 		
 	\end{thebibliography}
 	

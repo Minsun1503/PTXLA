@@ -1,0 +1,17 @@
+network_params:
+  input_channel: 1
+  output_channel: 256
+  hidden_size: 256
+
+imgH: 32
+lang_list:
+  - 'vi'
+  - 'en'
+
+# Thêm các tham số kiến trúc này để khớp với lúc Train
+Transformation: 'None'
+FeatureExtraction: 'ResNet'
+SequenceModeling: 'BiLSTM'
+Prediction: 'CTC'
+
+character_list: "0123456789abcdefghijklmnopqrstuvwxyzáàảãạăắằẳẵặâấầẩẫậđéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵABCDEFGHIJKLMNOPQRSTUVWXYZÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬĐÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴ"

@@ -1,112 +1,151 @@
 import cv2
 import easyocr
 import re
+import os
 import numpy as np
 from typing import Dict, List
 from config import Config
 
-
 class OCREngine:
     """
-    Handles the core Optical Character Recognition (OCR) logic.
-    Includes Post-processing (Regex Validation) to clean data.
+    Engine xử lý nhận dạng chữ (OCR) với chế độ Dual-Mode:
+    Kết hợp giữa Model Pre-trained (Gốc) và Model Fine-tuned (Custom).
     """
 
     def __init__(self, ocr_config: Config.OCRConfig):
-        """
-        Initializes the OCR engine and EasyOCR model.
-        """
-        print("Initializing EasyOCR reader... (This may take a moment)")
-        # GPU=False để chạy ổn định trên mọi máy, nếu có GPU mạnh thì set True
-        self.reader = easyocr.Reader(ocr_config.OCR_LANGUAGES, gpu=False)
+        print("="*50)
+        print("🛠️  KHỞI TẠO HỆ THỐNG OCR KÉP (DUAL-MODE)")
+        print("="*50)
+
+        # --- 1. LOAD MODEL GỐC (DEFAULT) ---
+        print("1️⃣  Đang load Model Gốc (Online/Pretrained)...")
+        try:
+            self.reader_default = easyocr.Reader(['vi'], gpu=False)
+            print("   ✅ Model Gốc: Sẵn sàng.")
+        except Exception as e:
+            print(f"   ❌ Lỗi load Model Gốc: {e}")
+            self.reader_default = None
+
+        # --- 2. LOAD MODEL CUSTOM (FINE-TUNED) ---
+        print("2️⃣  Đang load Model Custom (Fine-tuned)...")
+        current_dir = os.getcwd()
+        model_dir = os.path.join(current_dir, "custom_model")
+        
+        # --- CẤU HÌNH TÊN FILE MODEL Ở ĐÂY ---
+        CUSTOM_NAME = 'ckt_79'
+
+        pth_path = os.path.join(model_dir, f"{CUSTOM_NAME}.pth")
+        if os.path.exists(pth_path):
+            try:
+                self.reader_custom = easyocr.Reader(
+                    lang_list=['vi'],
+                    gpu=False,
+                    model_storage_directory=model_dir,
+                    user_network_directory=model_dir,
+                    recog_network=CUSTOM_NAME
+                )
+                self.has_custom = True
+                print(f"   ✅ Model Custom: Sẵn sàng ({CUSTOM_NAME})")
+            except Exception as e:
+                print(f"   ❌ Lỗi load Model Custom: {e}")
+                self.has_custom = False
+        else:
+            self.has_custom = False
+            print(f"   ⚠️ CẢNH BÁO: Không tìm thấy file {CUSTOM_NAME}.pth tại {model_dir}")
+
         self.cfg = ocr_config
-        print("EasyOCR reader initialized.")
+        print("="*50 + "\n")
 
     def _preprocess_for_ocr(self, image: np.ndarray) -> np.ndarray:
-        """
-        Tiền xử lý ảnh trước khi đưa vào OCR:
-        - Chuyển xám
-        - Khử nhiễu
-        - Phân ngưỡng (Threshold) để chữ đen rõ ràng trên nền trắng
-        """
+        """Chuyển ảnh xám và phân ngưỡng Otsu"""
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-        # Dùng Otsu Threshold để tự động tách chữ khỏi nền giấy
-        # Thresh Binary: Chữ đen (0), Nền trắng (255)
-        # Lưu ý: EasyOCR thích nền trắng chữ đen hoặc ngược lại đều được, 
-        # nhưng ảnh sạch sẽ tốt hơn.
         processed_image = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-
-        # (Tuỳ chọn) Dilation nhẹ nếu chữ quá mảnh
-        # kernel = np.ones((2,2), np.uint8)
-        # processed_image = cv2.erode(processed_image, kernel, iterations=1)
-
         return processed_image
 
     def _post_process_text(self, key_name: str, raw_text: str) -> str:
-        """
-        [NÂNG CẤP] Hàm hậu xử lý (Validation/Cleaning)
-        Dựa vào tên trường (key_name) để áp dụng Regex phù hợp.
-        """
+        """Làm sạch dữ liệu bằng Regex"""
         text = raw_text.strip()
-
-        # 1. Nếu là SBD hoặc ID -> Chỉ giữ lại số
-        if "sbd" in key_name.lower() or "id" in key_name.lower() or "code" in key_name.lower():
-            # Regex: \D nghĩa là "non-digit". Thay thế tất cả ký tự không phải số bằng ""
-            clean_text = re.sub(r'\D', '', text)
-            return clean_text
-
-        # 2. Nếu là Tên (Name) -> Chuẩn hoá viết hoa chữ cái đầu (Title Case)
-        if "name" in key_name.lower() or "ten" in key_name.lower():
-            # Xoá ký tự đặc biệt, chỉ giữ chữ và khoảng trắng
-            clean_text = re.sub(r'[^\w\s]', '', text) 
-            return clean_text.title() # Ví dụ: "nguyen VAN a" -> "Nguyen Van A"
-
-        # 3. Mặc định -> Chỉ xoá khoảng trắng thừa
+        # Chỉ giữ số cho SBD và ID
+        if "sbd" in key_name.lower() or "id" in key_name.lower():
+            return re.sub(r'\D', '', text) 
+        # Chuẩn hóa Tên
+        if "name" in key_name.lower():
+            clean = re.sub(r'[^\w\s]', '', text)
+            return clean.title()
+        # Mặc định
         return re.sub(r'\s+', ' ', text)
 
     def extract_text_from_regions(self, image: np.ndarray, ocr_regions: Dict[str, List[int]]) -> Dict[str, str]:
         """
-        Cắt ảnh theo toạ độ và đọc chữ.
+        Trích xuất văn bản từ các vùng ảnh.
+        IN RA BẢNG SO SÁNH GIỮA 2 MODEL.
         """
-        if not ocr_regions:
+        if not ocr_regions: 
             return {}
-
+        
         extracted_data = {}
 
+        # --- HEADER BẢNG SO SÁNH ---
+        print(f"\n--- 🔍 KẾT QUẢ SO SÁNH OCR ({len(ocr_regions)} vùng) ---")
+        # Format cột cho thẳng hàng: Vùng (15 ký tự), Gốc (25 ký tự), Custom (25 ký tự)
+        print(f"{'VÙNG (ROI)':<15} | {'MODEL GỐC':<25} | {'MODEL CUSTOM (TRAINED)':<25}")
+        print("-" * 75)
+	
+        PADDING_X = 0
+        PADDING_Y = 15
+
         for region_name, coords in ocr_regions.items():
-            if len(coords) != 4:
-                continue
-
+            if len(coords) != 4: continue
             x, y, w, h = coords
-            # Cắt vùng ảnh (ROI)
-            roi = image[y:y+h, x:x+w]
+            
+            # --- 1. TÍNH TỌA ĐỘ MỚI (Nới rộng) ---
+            img_h, img_w = image.shape[:2]
+            
+            x_new = max(0, x - PADDING_X)
+            y_new = max(0, y - PADDING_Y)
+            w_new = w + (2 * PADDING_X)
+            h_new = h + (2 * PADDING_Y)
+            
+            # Đảm bảo không tràn viền ảnh gốc
+            if x_new + w_new > img_w: w_new = img_w - x_new
+            if y_new + h_new > img_h: h_new = img_h - y_new
+            
+            # --- 2. CẮT ẢNH THEO TỌA ĐỘ MỚI ---
+            roi = image[y_new:y_new+h_new, x_new:x_new+w_new]
+            
+            # Kiểm tra an toàn
+            if roi.size == 0: continue
 
-            if roi.size == 0:
-                extracted_data[region_name] = ""
-                continue
-
-            # 1. Tiền xử lý ảnh
+            # --- 3. TIẾP TỤC XỬ LÝ ---
+            # Tiền xử lý (Quan trọng cho Model Custom)
             processed_roi = self._preprocess_for_ocr(roi)
 
-            # 2. Đọc bằng EasyOCR
-            # paragraph=True giúp gộp các từ lại thành dòng
-            ocr_result = self.reader.readtext(
-                processed_roi,
-                detail=0,
-                paragraph=True
-                # allowlist=self.cfg.ALLOW_LIST # Có thể dùng hoặc không
-            )
+            # --- 1. CHẠY MODEL GỐC ---
+            text_default = "N/A"
+            if self.reader_default:
+                res_default = self.reader_default.readtext(processed_roi, detail=0, paragraph=True)
+                text_default = ' '.join(res_default) if res_default else ""
 
-            # 3. Gộp kết quả
-            raw_text = ' '.join(ocr_result) if ocr_result else ""
+            # --- 2. CHẠY MODEL CUSTOM ---
+            text_custom = "N/A"
+            if self.has_custom:
+                res_custom = self.reader_custom.readtext(processed_roi, detail=0, paragraph=True)
+                text_custom = ' '.join(res_custom) if res_custom else ""
 
-            # 4. Hậu xử lý (Validate & Clean) - "Vũ khí" để báo cáo
-            final_text = self._post_process_text(region_name, raw_text)
+            # --- 3. IN KẾT QUẢ RA MÀN HÌNH ---
+            # Cắt ngắn text nếu quá dài để không vỡ bảng
+            display_default = (text_default[:22] + '..') if len(text_default) > 22 else text_default
+            display_custom = (text_custom[:22] + '..') if len(text_custom) > 22 else text_custom
+            
+            print(f"{region_name:<15} | {display_default:<25} | {display_custom:<25}  <--")
 
+            # --- 4. CHỌN KẾT QUẢ ĐỂ LƯU ---
+            # Ưu tiên Custom Model nếu có, nếu không dùng Default
+            raw_text_to_use = text_custom if self.has_custom else text_default
+            
+            # Hậu xử lý (Regex)
+            final_text = self._post_process_text(region_name, raw_text_to_use)
             extracted_data[region_name] = final_text
 
-            # Debug log
-            print(f"  > OCR '{region_name}': Raw='{raw_text}' -> Clean='{final_text}'")
-
+        print("-" * 75 + "\n")
         return extracted_data
