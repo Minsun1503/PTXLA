@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (MiKTeX 24.1) (preloaded format=xelatex 2026.1.13)  23 JAN 2026 17:13
+This is XeTeX, Version 3.141592653-2.6-0.999995 (MiKTeX 24.1) (preloaded format=xelatex 2026.1.13)  24 JAN 2026 23:08
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -233,6 +233,72 @@ LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
 )
+(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/caption
+\subcaption.sty
+Package: subcaption 2023/07/28 v1.6b Sub-captions (AR)
+
+(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/caption
+\caption.sty
+Package: caption 2023/08/05 v3.6o Customizing captions (AR)
+
+(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/caption
+\caption3.sty
+Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
+
+(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/graphic
+s\keyval.sty
+Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+\KV@toks@=\toks22
+)
+\caption@tempdima=\dimen154
+\captionmargin=\dimen155
+\caption@leftmargin=\dimen156
+\caption@rightmargin=\dimen157
+\caption@width=\dimen158
+\caption@indent=\dimen159
+\caption@parindent=\dimen160
+\caption@hangindent=\dimen161
+Package caption Info: Standard document class detected.
+)
+\c@caption@flags=\count287
+\c@continuedfloat=\count288
+)
+Package caption Info: New subtype `subfigure' on input line 238.
+\c@subfigure=\count289
+Package caption Info: New subtype `subtable' on input line 238.
+\c@subtable=\count290
+)
+(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/multiro
+w\multirow.sty
+Package: multirow 2024/11/12 v2.9 Span multiple rows of a table
+\multirow@colwidth=\skip53
+\multirow@cntb=\count291
+\multirow@dima=\skip54
+\bigstrutjot=\dimen162
+)
+(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/tools\t
+abularx.sty
+Package: tabularx 2023/07/08 v2.11c `tabularx' package (DPC)
+
+(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/tools\a
+rray.sty
+Package: array 2023/10/16 v2.5g Tabular extension package (FMi)
+\col@sep=\dimen163
+\ar@mcellbox=\box54
+\extrarowheight=\dimen164
+\NC@list=\toks23
+\extratabsurround=\skip55
+\backup@length=\skip56
+\ar@cellbox=\box55
+)
+\TX@col@width=\dimen165
+\TX@old@table=\dimen166
+\TX@old@col=\dimen167
+\TX@target=\dimen168
+\TX@delta=\dimen169
+\TX@cols=\count292
+\TX@ftn=\toks24
+)
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/amsfont
 s\amssymb.sty
 Package: amssymb 2013/01/14 v3.01 AMS font symbols
@@ -241,11 +307,6 @@ Package: amssymb 2013/01/14 v3.01 AMS font symbols
 s\graphicx.sty
 Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
 
-(C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/graphic
-s\keyval.sty
-Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
-\KV@toks@=\toks22
-)
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/graphic
 s\graphics.sty
 Package: graphics 2022/03/10 v1.4e Standard LaTeX Graphics (DPC,SPQR)
@@ -264,8 +325,8 @@ Package graphics Info: Driver file: xetex.def on input line 107.
 s-def\xetex.def
 File: xetex.def 2022/09/22 v5.0n Graphics/color driver for xetex
 ))
-\Gin@req@height=\dimen154
-\Gin@req@width=\dimen155
+\Gin@req@height=\dimen170
+\Gin@req@width=\dimen171
 )
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/hyperre
 f\hyperref.sty
@@ -331,16 +392,16 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 ns\kvoptions.sty
 Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
 ))
-\c@section@level=\count287
+\c@section@level=\count293
 )
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/etoolbo
 x\etoolbox.sty
 Package: etoolbox 2020/10/05 v2.5k e-TeX tools for LaTeX (JAW)
-\etb@tempcnta=\count288
+\etb@tempcnta=\count294
 )
-\@linkdim=\dimen156
-\Hy@linkcounter=\count289
-\Hy@pagecounter=\count290
+\@linkdim=\dimen172
+\Hy@linkcounter=\count295
+\Hy@pagecounter=\count296
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/hyperre
 f\pd1enc.def
@@ -350,7 +411,7 @@ File: pd1enc.def 2023-11-26 v7.01g Hyperref: PDFDocEncoding definition (HO)
 lc\intcalc.sty
 Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 )
-\Hy@SavedSpaceFactor=\count291
+\Hy@SavedSpaceFactor=\count297
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/hyperre
 f\puenc.def
@@ -363,7 +424,7 @@ Package hyperref Info: Plain pages OFF on input line 4196.
 Package hyperref Info: Backreferencing OFF on input line 4201.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4448.
-\c@Hy@tempcnt=\count292
+\c@Hy@tempcnt=\count298
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/url\url
 .sty
@@ -371,7 +432,7 @@ Package hyperref Info: Bookmarks ON on input line 4448.
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
 LaTeX Info: Redefining \url on input line 4786.
-\XeTeXLinkMargin=\dimen157
+\XeTeXLinkMargin=\dimen173
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/generic/bitse
 t\bitset.sty
@@ -382,9 +443,9 @@ tcalc\bigintcalc.sty
 Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
 )
 ))
-\Fld@menulength=\count293
-\Field@Width=\dimen158
-\Fld@charsize=\dimen159
+\Fld@menulength=\count299
+\Field@Width=\dimen174
+\Fld@charsize=\dimen175
 Package hyperref Info: Hyper figures OFF on input line 6065.
 Package hyperref Info: Link nesting OFF on input line 6070.
 Package hyperref Info: Hyper index ON on input line 6073.
@@ -398,9 +459,9 @@ begshi-ltx.sty
 Package: atbegshi-ltx 2021/01/10 v1.0c Emulation of the original atbegshi
 package with kernel methods
 )
-\Hy@abspage=\count294
-\c@Item=\count295
-\c@Hfootnote=\count296
+\Hy@abspage=\count300
+\c@Item=\count301
+\c@Hfootnote=\count302
 )
 Package hyperref Info: Driver (autodetected): hxetex.
 
@@ -413,11 +474,11 @@ genc\stringenc.sty
 Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
 )
 )
-\pdfm@box=\box54
-\c@Hy@AnnotLevel=\count297
-\HyField@AnnotCount=\count298
-\Fld@listcount=\count299
-\c@bookmark@seq@number=\count300
+\pdfm@box=\box56
+\c@Hy@AnnotLevel=\count303
+\HyField@AnnotCount=\count304
+\Fld@listcount=\count305
+\c@bookmark@seq@number=\count306
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/rerunfi
 lecheck\rerunfilecheck.sty
@@ -430,17 +491,17 @@ Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 84.
 )
-\Hy@SectionHShift=\skip53
+\Hy@SectionHShift=\skip57
 )
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/enumite
 m\enumitem.sty
 Package: enumitem 2025/02/06 v3.11 Customized lists
-\labelindent=\skip54
-\enit@outerparindent=\dimen160
-\enit@toks=\toks23
-\enit@inbox=\box55
-\enit@count@id=\count301
-\enitdp@description=\count302
+\labelindent=\skip58
+\enit@outerparindent=\dimen176
+\enit@toks=\toks25
+\enit@inbox=\box57
+\enit@count@id=\count307
+\enitdp@description=\count308
 )
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/tools\i
 ndentfirst.sty
@@ -449,11 +510,11 @@ Package: indentfirst 2023/07/02 v1.03 Indent first paragraph (DPC)
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/float\f
 loat.sty
 Package: float 2001/11/08 v1.3d Float enhancements (AL)
-\c@float@type=\count303
-\float@exts=\toks24
-\float@box=\box56
-\@float@everytoks=\toks25
-\@floatcapt=\box57
+\c@float@type=\count309
+\float@exts=\toks26
+\float@box=\box58
+\@float@everytoks=\toks27
+\@floatcapt=\box59
 )
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/geometr
 y\geometry.sty
@@ -463,42 +524,42 @@ Package: geometry 2020/01/02 v5.9 Page Geometry
 \ifvtex.sty
 Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
 )
-\Gm@cnth=\count304
-\Gm@cntv=\count305
-\c@Gm@tempcnt=\count306
-\Gm@bindingoffset=\dimen161
-\Gm@wd@mp=\dimen162
-\Gm@odd@mp=\dimen163
-\Gm@even@mp=\dimen164
-\Gm@layoutwidth=\dimen165
-\Gm@layoutheight=\dimen166
-\Gm@layouthoffset=\dimen167
-\Gm@layoutvoffset=\dimen168
-\Gm@dimlist=\toks26
+\Gm@cnth=\count310
+\Gm@cntv=\count311
+\c@Gm@tempcnt=\count312
+\Gm@bindingoffset=\dimen177
+\Gm@wd@mp=\dimen178
+\Gm@odd@mp=\dimen179
+\Gm@even@mp=\dimen180
+\Gm@layoutwidth=\dimen181
+\Gm@layoutheight=\dimen182
+\Gm@layouthoffset=\dimen183
+\Gm@layoutvoffset=\dimen184
+\Gm@dimlist=\toks28
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/geometr
 y\geometry.cfg))
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/listing
 s\listings.sty
-\lst@mode=\count307
-\lst@gtempboxa=\box58
-\lst@token=\toks27
-\lst@length=\count308
-\lst@currlwidth=\dimen169
-\lst@column=\count309
-\lst@pos=\count310
-\lst@lostspace=\dimen170
-\lst@width=\dimen171
-\lst@newlines=\count311
-\lst@lineno=\count312
-\lst@maxwidth=\dimen172
+\lst@mode=\count313
+\lst@gtempboxa=\box60
+\lst@token=\toks29
+\lst@length=\count314
+\lst@currlwidth=\dimen185
+\lst@column=\count315
+\lst@pos=\count316
+\lst@lostspace=\dimen186
+\lst@width=\dimen187
+\lst@newlines=\count317
+\lst@lineno=\count318
+\lst@maxwidth=\dimen188
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/listing
 s\lstmisc.sty
 File: lstmisc.sty 2023/02/27 1.9 (Carsten Heinz)
-\c@lstnumber=\count313
-\lst@skipnumbers=\count314
-\lst@framebox=\box59
+\c@lstnumber=\count319
+\lst@skipnumbers=\count320
+\lst@framebox=\box61
 )
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/listing
 s\listings.cfg
@@ -534,97 +595,102 @@ LaTeX Warning: Unused global option(s):
 (real_report.aux)
 \openout1 = `real_report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 60.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 61.
+LaTeX Font Info:    ... okay on input line 61.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 61.
+LaTeX Font Info:    ... okay on input line 61.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 61.
+LaTeX Font Info:    ... okay on input line 61.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 61.
+LaTeX Font Info:    ... okay on input line 61.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 61.
 LaTeX Font Info:    Trying to load font information for TS1+cmr on input line 6
-0.
+1.
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/base\ts
 1cmr.fd
 File: ts1cmr.fd 2023/04/13 v2.5m Standard LaTeX font definitions
 )
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 60.
-LaTeX Font Info:    ... okay on input line 60.
+LaTeX Font Info:    ... okay on input line 61.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 61.
+LaTeX Font Info:    ... okay on input line 61.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 61.
+LaTeX Font Info:    ... okay on input line 61.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 61.
+LaTeX Font Info:    ... okay on input line 61.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 61.
+LaTeX Font Info:    ... okay on input line 61.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 61.
+LaTeX Font Info:    ... okay on input line 61.
 
 Package fontspec Info: Adjusting the maths setup (use [no-math] to avoid
 (fontspec)             this).
 
 \symlegacymaths=\mathgroup6
 LaTeX Font Info:    Overwriting symbol font `legacymaths' in version `bold'
-(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 60.
-LaTeX Font Info:    Redeclaring math accent \acute on input line 60.
-LaTeX Font Info:    Redeclaring math accent \grave on input line 60.
-LaTeX Font Info:    Redeclaring math accent \ddot on input line 60.
-LaTeX Font Info:    Redeclaring math accent \tilde on input line 60.
-LaTeX Font Info:    Redeclaring math accent \bar on input line 60.
-LaTeX Font Info:    Redeclaring math accent \breve on input line 60.
-LaTeX Font Info:    Redeclaring math accent \check on input line 60.
-LaTeX Font Info:    Redeclaring math accent \hat on input line 60.
-LaTeX Font Info:    Redeclaring math accent \dot on input line 60.
-LaTeX Font Info:    Redeclaring math accent \mathring on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Delta on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Theta on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Xi on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Pi on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Phi on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Psi on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \Omega on input line 60.
-LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 60.
-LaTeX Font Info:    Redeclaring symbol font `operators' on input line 60.
+(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 61.
+LaTeX Font Info:    Redeclaring math accent \acute on input line 61.
+LaTeX Font Info:    Redeclaring math accent \grave on input line 61.
+LaTeX Font Info:    Redeclaring math accent \ddot on input line 61.
+LaTeX Font Info:    Redeclaring math accent \tilde on input line 61.
+LaTeX Font Info:    Redeclaring math accent \bar on input line 61.
+LaTeX Font Info:    Redeclaring math accent \breve on input line 61.
+LaTeX Font Info:    Redeclaring math accent \check on input line 61.
+LaTeX Font Info:    Redeclaring math accent \hat on input line 61.
+LaTeX Font Info:    Redeclaring math accent \dot on input line 61.
+LaTeX Font Info:    Redeclaring math accent \mathring on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Delta on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Theta on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Xi on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Pi on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Phi on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Psi on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \Omega on input line 61.
+LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 61.
+LaTeX Font Info:    Redeclaring symbol font `operators' on input line 61.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `normal' on input line 60.
+(Font)              `operators' in the math version `normal' on input line 61.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  OT1/cmr/m/n --> TU/TimesNewRoman(0)/m/n on input line 6
-0.
+1.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `bold' on input line 60.
+(Font)              `operators' in the math version `bold' on input line 61.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
 (Font)                  OT1/cmr/bx/n --> TU/TimesNewRoman(0)/m/n on input line 
-60.
+61.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  TU/TimesNewRoman(0)/m/n --> TU/TimesNewRoman(0)/m/n on 
-input line 60.
+input line 61.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
 (Font)                  OT1/cmr/m/it --> TU/TimesNewRoman(0)/m/it on input line
- 60.
+ 61.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
 (Font)                  OT1/cmr/bx/n --> TU/TimesNewRoman(0)/b/n on input line 
-60.
+61.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/cmss/m/n --> TU/lmss/m/n on input line 60.
+(Font)                  OT1/cmss/m/n --> TU/lmss/m/n on input line 61.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/cmtt/m/n --> TU/lmtt/m/n on input line 60.
+(Font)                  OT1/cmtt/m/n --> TU/lmtt/m/n on input line 61.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
 (Font)                  TU/TimesNewRoman(0)/m/n --> TU/TimesNewRoman(0)/b/n on 
-input line 60.
+input line 61.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
 (Font)                  OT1/cmr/bx/it --> TU/TimesNewRoman(0)/b/it on input lin
-e 60.
+e 61.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/cmss/bx/n --> TU/lmss/b/n on input line 60.
+(Font)                  OT1/cmss/bx/n --> TU/lmss/b/n on input line 61.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/cmtt/m/n --> TU/lmtt/b/n on input line 60.
-Package hyperref Info: Link coloring OFF on input line 60.
+(Font)                  OT1/cmtt/m/n --> TU/lmtt/b/n on input line 61.
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: float package is loaded.
+Package caption Info: hyperref package is loaded.
+Package caption Info: listings package is loaded.
+Package caption Info: End \AtBeginDocument code.
+Package hyperref Info: Link coloring OFF on input line 61.
  (real_report.out) (real_report.out)
 \@outlinefile=\write3
 \openout3 = `real_report.out'.
@@ -664,15 +730,15 @@ Package hyperref Info: Link coloring OFF on input line 60.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-\c@lstlisting=\count315
-LaTeX Font Info:    Trying to load font information for U+msa on input line 63.
+\c@lstlisting=\count321
+LaTeX Font Info:    Trying to load font information for U+msa on input line 64.
 
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/amsfont
 s\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 63.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 64.
 
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/amsfont
@@ -689,10 +755,10 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
  [2]
 Chương 1.
 
-LaTeX Warning: Citation `ref_omr' on page 3 undefined on input line 85.
+LaTeX Warning: Citation `ref_omr' on page 3 undefined on input line 86.
 
 
-LaTeX Warning: Citation `ref_ocr' on page 3 undefined on input line 86.
+LaTeX Warning: Citation `ref_ocr' on page 3 undefined on input line 87.
 
 [3
 
@@ -701,28 +767,36 @@ Chương 2.
 [5
 
 ] [6]
-File: images/easyocr_pipeline.png Graphic file (type bmp)
-<images/easyocr_pipeline.png>
+File: images/shadow_comparison_result.jpg Graphic file (type bmp)
+<images/shadow_comparison_result.jpg>
  [7]
-Overfull \vbox (73.99913pt too high) has occurred while \output is active []
-
-
-[8] [9]
+File: images/craft_step_1.png Graphic file (type bmp)
+<images/craft_step_1.png>
+File: images/craft_step_2.png Graphic file (type bmp)
+<images/craft_step_2.png>
+File: images/craft_step_3.png Graphic file (type bmp)
+<images/craft_step_3.png>
+File: images/craft_step_4.png Graphic file (type bmp)
+<images/craft_step_4.png>
+ [8] [9]
+File: images/ctc_decoding_demo.png Graphic file (type bmp)
+<images/ctc_decoding_demo.png>
+ [10] [11]
 Chương 3.
 File: images/sequence_diagram.png Graphic file (type bmp)
 <images/sequence_diagram.png>
 
-Overfull \hbox (158.43848pt too wide) in paragraph at lines 268--269
+Overfull \hbox (36.70189pt too wide) in paragraph at lines 486--487
  [][] 
  []
 
-[10
+[12
 
-]
+] [13]
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 278.
- [11]
-Overfull \hbox (25.56636pt too wide) in paragraph at lines 310--311
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 496.
+
+Overfull \hbox (25.56636pt too wide) in paragraph at lines 528--529
 []\TU/TimesNewRoman(0)/m/n/10 Chương trình quét toàn bộ các file ảnh hợp lệ (.j
 pg, .png) có trong thư mục đầu vào \TU/lmtt/m/n/10 data/raw/batch_input/\TU/Tim
 esNewRoman(0)/m/n/10 . 
@@ -730,68 +804,101 @@ esNewRoman(0)/m/n/10 .
 
 File: images/sequence_diagram.png Graphic file (type bmp)
 <images/sequence_diagram.png>
-[12]
+[14]
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <12> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 345.
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 563.
 
 (C:\Users\84845.DESKTOP-6UDUU1B\AppData\Local\Programs\MiKTeX\tex/latex/listing
 s\lstlang1.sty
 File: lstlang1.sty 2023/02/27 1.9 listings language file
 )
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 348.
- [13] [14]
+nput line 566.
+ [15] [16]
 Chương 4.
 
-Overfull \hbox (0.81941pt too wide) in paragraph at lines 392--393
+Overfull \hbox (0.81941pt too wide) in paragraph at lines 610--611
 \TU/TimesNewRoman(0)/m/n/10 định tọa độ chính xác của các ô trắc nghiệm. Để khắ
 c phục, nhóm đã xây dựng module \TU/lmtt/m/n/10 tools/generate_sheet.py
  []
 
-[15
+[17
 
-] [16]
-Overfull \hbox (48.85286pt too wide) in paragraph at lines 488--489
+] [18]
+Overfull \hbox (48.85286pt too wide) in paragraph at lines 706--707
 []\TU/TimesNewRoman(0)/b/n/10 Trích xuất vùng quan tâm (ROI Segmentation): \TU/
 TimesNewRoman(0)/m/n/10 Dựa trên tọa độ vùng SBD được định nghĩa trong \TU/lmtt
 /m/n/10 coordinates.json\TU/TimesNewRoman(0)/m/n/10 ,
  []
 
-[17] [18]
+[19] [20]
 File: images/log_dual_mode.png Graphic file (type bmp)
 <images/log_dual_mode.png>
- [19]
+ [21]
 Chương 5.
+[22
 
-Underfull \hbox (badness 2856) in paragraph at lines 627--627
-[]\TU/TimesNewRoman(0)/b/n/10 Model Tinh chỉnh (Cus-
+]
+Underfull \hbox (badness 1596) in paragraph at lines 868--868
+\TU/TimesNewRoman(0)/m/n/10 Thường nhận diện sai thành âm
  []
 
-[20
 
-]
-File: images/input_sample.jpg Graphic file (type bmp)
-<images/input_sample.jpg>
-File: images/warped_sample.jpg Graphic file (type bmp)
-<images/warped_sample.jpg>
- [21]
+Underfull \hbox (badness 1142) in paragraph at lines 870--870
+\TU/TimesNewRoman(0)/m/n/10 Thường xuyên sai chính tả hoặc
+ []
+
+
+Underfull \hbox (badness 5548) in paragraph at lines 870--870
+\TU/TimesNewRoman(0)/m/n/10 dính chữ (VD: ”Minh Nhat”$\OMS/cmsy/m/n/10 !$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 872--872
+\TU/TimesNewRoman(0)/m/n/10 Hiện tượng ”Ảo
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 872--872
+\TU/TimesNewRoman(0)/m/n/10 giác”(Hallucination): Cố gắng
+ []
+
+
+Underfull \hbox (badness 5563) in paragraph at lines 872--872
+\TU/TimesNewRoman(0)/m/n/10 thành chữ cái tiếng Việt (VD:
+ []
+
 File: images/detailed_report.png Graphic file (type bmp)
 <images/detailed_report.png>
- [22]
+[23]
 File: images/scoring_result.png Graphic file (type bmp)
 <images/scoring_result.png>
- [23] [24] [25]
+ [24] [25] [26]
 Chương 6.
-[26
+[27
 
-]
-Underfull \hbox (badness 2119) in paragraph at lines 801--802
+] [28]
+Underfull \hbox (badness 2119) in paragraph at lines 1064--1065
 []\TU/TimesNewRoman(0)/m/n/10 OpenCV Team. (2024). \TU/TimesNewRoman(0)/m/it/10
  OpenCV-Python Tutorials: Image Processing\TU/TimesNewRoman(0)/m/n/10 . []$[][]
 [][][] [] [] [] [][][][] [] [][][][][][] [] [][][] []
  []
 
-[27
+
+Underfull \hbox (badness 10000) in paragraph at lines 1074--1075
+[]\TU/TimesNewRoman(0)/m/n/10 HuggingFace Datasets. (2023). \TU/TimesNewRoman(0
+)/m/it/10 Vietnamese Handwriting Dataset (HAT2023)\TU/TimesNewRoman(0)/m/n/10 .
+ Repository:
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1074--1075
+\TU/lmtt/m/n/10 vklinhhh/OCR_handwriting_HAT2023\TU/TimesNewRoman(0)/m/n/10 . [
+]$[][][][][] [] [] [] [][][][][][][][][][][] [] [][] [] [][][][][][][][] [] [][
+][][][][][][] [] [][][] []
+ []
+
+[29
 
 ] (real_report.aux)
  ***********
@@ -803,15 +910,15 @@ L3 programming layer <2024-01-04>
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `real_report.out' has not changed.
-(rerunfilecheck)             Checksum: 6D6C738A561B14E9F46284A05164A1B9;18912.
+(rerunfilecheck)             Checksum: 52A9914061C8012F13E302CED9F8C4F5;18849.
  ) 
 Here is how much of TeX's memory you used:
- 15929 strings out of 409617
- 295780 string characters out of 5770765
+ 17565 strings out of 409617
+ 327249 string characters out of 5770765
  2197191 words of memory out of 5000000
- 37817 multiletter control sequences out of 15000+600000
- 565037 words of font info for 96 fonts, out of 8000000 for 9000
+ 39432 multiletter control sequences out of 15000+600000
+ 565061 words of font info for 99 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 79i,10n,93p,503b,1946s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 79i,11n,93p,523b,1940s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on real_report.pdf (28 pages).
+Output written on real_report.pdf (30 pages).

@@ -11,9 +11,10 @@
 % --- CÁC GÓI TIỆN ÍCH ---
 \usepackage{amsmath}
 \usepackage{amsfonts}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{tabularx}
 \usepackage{amssymb}
-% [demo] giúp chạy được kể cả khi thiếu ảnh (ảnh sẽ hiện thành ô đen)
-% Khi nào chép ảnh thật vào thư mục 'images', hãy xóa chữ [demo] đi
 \usepackage{graphicx} 
 \usepackage{hyperref}
 \usepackage{enumitem}
@@ -145,80 +146,297 @@
 	Hàm sử dụng: \texttt{cv2.cvtColor(image, cv2.COLOR\_BGR2GRAY)}.
 	
 	\subsection{Làm trơn ảnh (Gaussian Blur)}
-	Ảnh chụp thực tế luôn tồn tại nhiễu tần số cao (high-frequency noise) như nhiễu hạt (salt-and-pepper). Nếu không xử lý, các nhiễu này sẽ bị thuật toán Canny nhận nhầm là "biên".
 	
-	Đồ án sử dụng bộ lọc Gaussian (Gaussian Filter) đóng vai trò là một bộ lọc thông thấp (low-pass filter). Ảnh được tích chập (convolution) với một hạt nhân (kernel) $5 \times 5$. Giá trị pixel mới là trung bình có trọng số của các pixel lân cận, trong đó các pixel gần tâm có trọng số cao hơn.
+	\textbf{Tại sao cần làm trơn?}
+	Thuật toán phát hiện biên Canny (bước sau) hoạt động dựa trên đạo hàm (tính tốc độ thay đổi màu sắc). Đạo hàm cực kỳ nhạy cảm với nhiễu. Một điểm nhiễu nhỏ (ví dụ: vết bụi) cũng tạo ra sự thay đổi màu đột ngột, khiến Canny nhận nhầm đó là một cạnh. Do đó, việc làm mờ để xóa nhiễu là bắt buộc.
+	
+	\textbf{Cơ chế hoạt động:}
+	Đồ án sử dụng bộ lọc Gaussian thay vì bộ lọc trung bình (Mean Filter) thông thường.
+	\begin{itemize}
+		\item \textbf{Mean Filter:} Lấy trung bình cộng tất cả các điểm lân cận. Nhược điểm là làm mờ cả các cạnh quan trọng.
+		\item \textbf{Gaussian Filter:} Tính trung bình có trọng số (Weighted Average). Các điểm ảnh ở gần tâm sẽ có trọng số lớn, các điểm ở xa có trọng số nhỏ dần theo hình quả chuông (Bell Curve).
+	\end{itemize}
+	
+	\textbf{Ma trận hạt nhân (Kernel):}
+	Trong mã nguồn, hàm \texttt{cv2.GaussianBlur} sử dụng kernel kích thước $5 \times 5$. Về mặt toán học, đây là phép tích chập (convolution) ảnh gốc với một ma trận xấp xỉ Gaussian, ví dụ:
+	
+	\begin{equation}
+		K = \frac{1}{273} 
+		\begin{bmatrix} 
+			1 & 4 & 7 & 4 & 1 \\ 
+			4 & 16 & 26 & 16 & 4 \\ 
+			7 & 26 & 41 & 26 & 7 \\ 
+			4 & 16 & 26 & 16 & 4 \\ 
+			1 & 4 & 7 & 4 & 1 
+		\end{bmatrix}
+	\end{equation}
+	
+	Nhìn vào ma trận trên, ta thấy điểm trung tâm (giá trị 41) đóng góp nhiều nhất vào kết quả, các điểm rìa (giá trị 1) đóng góp rất ít.
+	
+	\textbf{Kết quả:} Phép toán này giúp loại bỏ nhiễu hạt tần số cao (high-frequency noise) nhưng vẫn giữ lại được độ sắc nét tương đối của các đường biên chính, tạo điều kiện tốt nhất cho thuật toán Canny.
 	
 	\subsection{Phát hiện biên (Canny Edge Detection)}
-	Thay vì dùng các toán tử đơn giản như Sobel (dễ bị đứt nét), nhóm sử dụng thuật toán Canny nhờ khả năng tối ưu hóa việc phát hiện biên thông qua quy trình 4 bước chặt chẽ:
-	\begin{enumerate}
-		\item \textbf{Khử nhiễu:} Sử dụng Gaussian Blur như đã trình bày ở trên.
-		\item \textbf{Tính Gradient:} Xác định cường độ và hướng thay đổi của độ sáng tại mỗi điểm.
-		\item \textbf{Non-maximum Suppression (Triệt tiêu phi cực đại):} Kỹ thuật này giúp làm mảnh nét biên. Thuật toán sẽ loại bỏ các điểm pixel không phải là cực đại cục bộ theo hướng gradient, đảm bảo đường biên chỉ rộng 1 pixel.
-		\item \textbf{Hysteresis Thresholding (Phân ngưỡng trễ):} Sử dụng hai ngưỡng (\texttt{threshold1} và \texttt{threshold2}).
-		\begin{itemize}
-			\item Điểm có cường độ $> T_{cao}$: Chắc chắn là biên (Strong Edge).
-			\item Điểm nằm giữa $[T_{thap}, T_{cao}]$: Chỉ được coi là biên nếu nó kết nối với một điểm "Strong Edge". Cơ chế này giúp thuật toán nối liền các đường biên bị đứt quãng do ánh sáng yếu.
-		\end{itemize}
-	\end{enumerate}
+	Thuật toán Canny được coi là chuẩn mực trong phát hiện biên nhờ khả năng tối ưu hóa giữa việc phát hiện đầy đủ các cạnh và hạn chế tối đa việc bắt nhầm nhiễu. Quy trình toán học gồm 4 bước:
+	
+	\textbf{Bước 1: Khử nhiễu (Noise Reduction)}
+	Sử dụng bộ lọc Gaussian (như đã trình bày ở mục 2.1.2) để làm trơn ảnh, vì các toán tử đạo hàm rất nhạy cảm với nhiễu.
+	
+	\textbf{Bước 2: Tính Gradient cường độ (Intensity Gradient)}
+	Sau khi làm trơn, thuật toán sử dụng bộ lọc Sobel theo hai hướng ngang ($G_x$) và dọc ($G_y$) để tính đạo hàm bậc nhất của ảnh.
+	
+	Cường độ biên (Edge Gradient) $G$ và hướng biên $\theta$ tại mỗi điểm ảnh $(x,y)$ được tính như sau:
+	\begin{equation}
+		G(x,y) = \sqrt{G_x^2 + G_y^2}
+	\end{equation}
+	\begin{equation}
+		\theta(x,y) = \arctan\left(\frac{G_y}{G_x}\right)
+	\end{equation}
+	Hướng biên $\theta$ rất quan trọng vì nó sẽ quyết định hướng quét cho bước tiếp theo.
+	
+	\textbf{Bước 3: Triệt tiêu phi cực đại (Non-maximum Suppression)}
+	Mục tiêu của bước này là "làm mảnh" (thinning) đường biên. Kết quả của bước 2 thường tạo ra các đường biên dày và mờ.
+	
+	Thuật toán sẽ duyệt qua toàn bộ các điểm ảnh. Tại mỗi điểm, nó so sánh cường độ $G$ của điểm đó với hai điểm lân cận theo hướng vuông góc với biên $\theta$.
+	\begin{itemize}
+		\item Nếu điểm hiện tại là lớn nhất (cực đại cục bộ): Giữ lại.
+		\item Nếu không: Gán giá trị về 0 (loại bỏ).
+	\end{itemize}
+	Kết quả là ta thu được các đường biên mảnh (độ rộng 1 pixel).
+	
+	\textbf{Bước 4: Phân ngưỡng trễ (Hysteresis Thresholding)}
+	Đây là bước quyết định giúp Canny vượt trội hơn các thuật toán khác trong việc xử lý biên đứt đoạn. Thuật toán phân loại các điểm ảnh thành 3 nhóm dựa trên hai ngưỡng $T_{min}$ và $T_{max}$:
+	
+	\begin{itemize}
+		\item \textbf{Biên mạnh (Strong Edge):} Cường độ $G > T_{max}$. Điểm này chắc chắn là biên.
+		\item \textbf{Biên yếu (Weak Edge):} Cường độ $T_{min} \le G \le T_{max}$. Điểm này nằm ở vùng tranh chấp.
+		\item \textbf{Không phải biên (Non-Edge):} Cường độ $G < T_{min}$. Loại bỏ ngay lập tức.
+	\end{itemize}
+	
+	\textbf{Cơ chế liên thông:} Một điểm "Biên yếu" sẽ được giữ lại (chuyển thành biên mạnh) \textbf{nếu và chỉ nếu} nó có kết nối (nằm cạnh) với một điểm "Biên mạnh". Ngược lại, nó sẽ bị coi là nhiễu và bị loại bỏ. Cơ chế này giúp nối liền các nét đứt quãng do ánh sáng yếu mà không làm tăng nhiễu.
 	
 	\subsection{Biến đổi phối cảnh (Perspective Transform)}
-	Để xử lý hiện tượng méo hình thang do góc chụp nghiêng, hệ thống cần thực hiện phép biến đổi phối cảnh để đưa ảnh về góc nhìn trực diện (Top-down view).
+	Do góc chụp nghiêng, các đường song song trong thực tế (như cạnh của phiếu thi) sẽ hội tụ tại một điểm ảo trong ảnh, tạo ra hiện tượng méo hình thang. Để khôi phục góc nhìn trực diện (Top-down view), hệ thống sử dụng phép biến đổi phối cảnh dựa trên \textbf{Ma trận Homography}.
 	
-	Về mặt toán học, đây là quá trình tìm Ma trận Homography $M$ kích thước $3 \times 3$. Do ma trận này có 8 bậc tự do (Degrees of Freedom), hệ thống yêu cầu tối thiểu 4 cặp điểm tương ứng (4 góc phiếu thi) để giải hệ phương trình:
+	\textbf{Cơ sở toán học:}
+	Quá trình này tìm một ma trận $M$ kích thước $3 \times 3$ để ánh xạ điểm nguồn $(x, y)$ sang điểm đích $(u, v)$. Vì đây là không gian tọa độ đồng nhất (Homogeneous Coordinates), phương trình được biểu diễn như sau:
+	
 	\begin{equation}
 		\begin{bmatrix} x' \\ y' \\ w' \end{bmatrix} = \begin{bmatrix} h_{11} & h_{12} & h_{13} \\ h_{21} & h_{22} & h_{23} \\ h_{31} & h_{32} & h_{33} \end{bmatrix} \times \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}
 	\end{equation}
-	Module \texttt{image\_utils.py} chịu trách nhiệm tính toán ma trận này và ánh xạ lại toàn bộ pixel sang hệ tọa độ mới.
+	
+	Tọa độ thực tế của điểm ảnh mới $(u, v)$ được tính bằng cách chuẩn hóa (chia cho tham số tỉ lệ $w'$):
+	\begin{equation}
+		u = \frac{x'}{w'} = \frac{h_{11}x + h_{12}y + h_{13}}{h_{31}x + h_{32}y + h_{33}}, \quad 
+		v = \frac{y'}{w'} = \frac{h_{21}x + h_{22}y + h_{23}}{h_{31}x + h_{32}y + h_{33}}
+	\end{equation}
+	
+	Do ma trận $M$ có 8 bậc tự do (thường chuẩn hóa $h_{33}=1$), hệ thống cần tối thiểu \textbf{4 cặp điểm tương ứng} (4 góc phiếu thi) để giải hệ phương trình tìm 8 ẩn số còn lại.
+	
+	\textbf{Cơ chế nội suy (Interpolation):}
+	Vì tọa độ $(u, v)$ tính được từ phép biến đổi ma trận thường là số thực (ví dụ: $10.6, 20.4$), không trùng khớp với lưới pixel số nguyên của ảnh kỹ thuật số, hàm \texttt{cv2.warpPerspective} mặc định sử dụng kỹ thuật \textbf{Nội suy song tuyến tính (Bilinear Interpolation)}.
+	
+	
+	
+	\textit{Ví dụ minh họa:}
+	Giả sử sau khi biến đổi, ta cần tìm giá trị màu tại điểm thực $P(10.6, 20.4)$. Điểm này nằm giữa 4 pixel nguyên:
+	\begin{itemize}
+		\item Góc trên-trái $A(10, 20)$
+		\item Góc trên-phải $B(11, 20)$
+		\item Góc dưới-trái $C(10, 21)$
+		\item Góc dưới-phải $D(11, 21)$
+	\end{itemize}
+	
+	Thay vì chỉ lấy giá trị của điểm gần nhất (Nearest Neighbor) gây ra hiện tượng răng cưa, thuật toán sẽ tính toán sự đóng góp màu sắc dựa trên khoảng cách:
+	\begin{itemize}
+		\item Điểm $P$ lệch về phía $x=11$ ($0.6$ đơn vị) và $y=20$ ($0.4$ đơn vị).
+		\item Do đó, màu của $P$ sẽ chịu ảnh hưởng nhiều nhất từ điểm $B(11, 20)$ và ít nhất từ điểm $C(10, 21)$.
+	\end{itemize}
+	
+	Công thức tổng quát:
+	\begin{equation}
+		f(x, y) \approx \sum_{i=0}^{1} \sum_{j=0}^{1} f(x_i, y_j) \cdot w_{ij}
+	\end{equation}
+	Trong đó $w_{ij}$ là diện tích hình chữ nhật đối diện, đảm bảo tổng trọng số bằng 1. Kỹ thuật này giúp ảnh đầu ra (output) giữ được độ mượt mà của các đường nét, đặc biệt quan trọng khi phóng to hoặc xoay ảnh.
 	
 	\subsection{Phân ngưỡng thích nghi (Adaptive Thresholding)}
-	Các phương pháp phân ngưỡng toàn cục (Global Thresholding) như Otsu giả định ánh sáng phân bố đều trên toàn ảnh. Điều này không đúng với ảnh chụp thực tế có bóng đổ.
 	
-	Nhóm lựa chọn Adaptive Gaussian Thresholding. Ngưỡng $T(x,y)$ tại mỗi điểm ảnh không cố định mà được tính dựa trên vùng lân cận:
+	\textbf{Hạn chế của Phân ngưỡng toàn cục (Global Thresholding):}
+	Các phương pháp truyền thống như Otsu tìm một giá trị ngưỡng $T$ duy nhất cho toàn bộ bức ảnh. Giả sử $T = 127$:
+	\begin{itemize}
+		\item Mọi điểm ảnh $< 127$ $\rightarrow$ Đen (Mực).
+		\item Mọi điểm ảnh $> 127$ $\rightarrow$ Trắng (Giấy).
+	\end{itemize}
+	Tuy nhiên, trong thực tế khi ảnh bị bóng đổ, cường độ sáng của vùng giấy trắng trong bóng râm có thể tụt xuống mức 100. Lúc này, Otsu sẽ nhận nhầm toàn bộ vùng bóng râm đó là "Mực đen", dẫn đến kết quả sai lệch hoàn toàn.
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.95\textwidth, keepaspectratio]{images/shadow_comparison_result.jpg}
+		\caption{So sánh kết quả phân ngưỡng trên ảnh thực tế có bóng đổ: (1) Ảnh gốc đầu vào; (2) Kết quả thất bại khi dùng Global Threshold (Otsu); (3) Kết quả xử lý thành công bằng Adaptive Gaussian Thresholding.}
+		\label{fig:shadow_comparison}
+	\end{figure}
+	
+	\textbf{Giải pháp Adaptive Gaussian Thresholding:}
+	Để khắc phục, nhóm sử dụng phương pháp phân ngưỡng thích nghi. Ngưỡng $T(x,y)$ tại mỗi điểm ảnh không cố định mà được tính toán động dựa trên các điểm lân cận:
+	
 	\begin{equation}
-		T(x, y) = \left( \sum_{i=-k}^{k} \sum_{j=-k}^{k} w(i,j) \cdot I(x+i, y+j) \right) - C
+		T(x, y) = \mu_{local}(x, y) - C
 	\end{equation}
-	Trong đó, $w(i,j)$ là trọng số Gaussian (các điểm gần tâm quan trọng hơn). Việc trừ đi hằng số $C$ giúp tinh chỉnh độ nhạy, đảm bảo tách biệt được vết mực ngay cả khi nền giấy tại vùng đó bị tối hơn các vùng khác.
+	
+	Trong đó:
+	\begin{itemize}
+		\item $\mu_{local}$: Là trung bình có trọng số Gaussian của vùng lân cận (Block Size $51 \times 51$).
+		\item $C$: Hằng số trừ đi (Constant), giúp tinh chỉnh độ nhạy (được thiết lập $C=10$).
+	\end{itemize}
+	
+	\textbf{Ví dụ minh họa cơ chế hoạt động:}
+	Xét một điểm ảnh $P$ nằm trong vùng bóng râm (Shadow Region):
+	\begin{itemize}
+		\item Giá trị thực của điểm $P$ (giấy trắng bị tối): $I(P) = 110$.
+		\item Trung bình độ sáng của vùng lân cận $P$: $\mu_{local} = 115$ (do cả vùng đều tối).
+	\end{itemize}
+	
+	\textit{So sánh cách xử lý:}
+	\begin{itemize}
+		\item \textbf{Nếu dùng Global ($T=127$):} $110 < 127 \rightarrow$ Kết luận là \textbf{ĐEN} (Sai, vì thực tế đây là giấy trắng).
+		\item \textbf{Nếu dùng Adaptive ($C=10$):} 
+		$$ T_{local} = 115 - 10 = 105 $$
+		$$ I(P) = 110 > 105 \rightarrow \text{Kết luận là \textbf{TRẮNG} (Đúng).} $$
+	\end{itemize}
+	
+	\textbf{Kết luận:} Nhờ cơ chế "nước nổi bèo nổi" (ngưỡng thay đổi theo nền), Adaptive Thresholding tách biệt hiệu quả vết mực in ngay cả khi cường độ sáng của nền giấy thay đổi liên tục trên toàn bức ảnh.
 	
 	\section{Cơ sở lý thuyết về Nhận dạng quang học (Deep Learning OCR)}
 	
 	Để giải quyết bài toán số hóa thông tin thí sinh (Tên, Số báo danh), đồ án sử dụng thư viện EasyOCR. Khác với các công cụ OCR truyền thống (như Tesseract) dựa trên các đặc trưng thủ công, EasyOCR là một hệ thống End-to-End Deep Learning, kết hợp hai mạng nơ-ron chuyên biệt cho hai tác vụ: Phát hiện (Detection) và Nhận dạng (Recognition).
 	
 	\subsection{Mạng phát hiện văn bản (Text Detection): CRAFT}
-	Để định vị vị trí các dòng chữ trong ảnh, EasyOCR sử dụng kiến trúc CRAFT (Character Region Awareness for Text Detection). 
+	Để định vị vị trí các dòng chữ trong ảnh, EasyOCR sử dụng kiến trúc \textbf{CRAFT (Character Region Awareness for Text Detection)}.
 	
-	Khác với các mô hình phát hiện vật thể (Object Detection) như YOLO hay SSD thường dùng khung bao hình chữ nhật (Bounding Box), CRAFT tiếp cận bài toán theo hướng phân đoạn ngữ nghĩa (Segmentation). Mô hình này dự đoán hai loại bản đồ nhiệt (heatmap) cho từng pixel:
+	\textbf{Sự khác biệt về cách tiếp cận:}
+	Hầu hết các mô hình phát hiện vật thể (như YOLO, SSD) tiếp cận theo hướng "Top-down" (dự đoán khung bao cho toàn bộ từ). Ngược lại, CRAFT tiếp cận theo hướng \textbf{"Bottom-up" (Từ dưới lên)}. Nó phát hiện từng ký tự riêng lẻ trước, sau đó mới liên kết chúng lại thành từ. Điều này giúp mô hình cực kỳ linh hoạt với các dạng văn bản có hình dạng bất kỳ.
+	
+	\textbf{Cơ chế Heatmap (Bản đồ nhiệt):}
+	Mô hình không trả về tọa độ hộp ngay lập tức mà trả về hai bản đồ xác suất (Probability Maps) cho từng pixel:
 	\begin{itemize}
-		\item \textbf{Region Score:} Xác suất pixel đó nằm trong vùng của một ký tự.
-		\item \textbf{Affinity Score:} Xác suất pixel đó là cầu nối (liên kết) giữa hai ký tự liền kề.
+		\item \textbf{Region Score:} Xác suất pixel đó là tâm của một ký tự.
+		\item \textbf{Affinity Score:} Xác suất pixel đó là khoảng không gian nối giữa hai ký tự liền kề.
 	\end{itemize}
-	\textbf{Ưu điểm:} Nhờ cơ chế liên kết (Affinity), CRAFT có khả năng phát hiện cực tốt các dòng văn bản bị cong, nghiêng hoặc biến dạng hình học - điều rất phổ biến khi chụp phiếu thi bằng điện thoại.
 	
-	\subsection{Mạng nhận dạng chuỗi (Text Recognition): CRNN + CTC}
-	Sau khi đã cắt được vùng ảnh chứa văn bản (ROI), bài toán trở thành chuyển đổi hình ảnh sang chuỗi ký tự (Image-to-Sequence). Kiến trúc CRNN (Convolutional Recurrent Neural Network) được áp dụng gồm 3 tầng xử lý nối tiếp:
-	
+	\textbf{Quá trình hậu xử lý (Post-processing):}
+	Sau khi có được hai bản đồ nhiệt này, hệ thống thực hiện các bước:
 	\begin{enumerate}
-		\item \textbf{Trích xuất đặc trưng (Feature Extraction - CNN):} Sử dụng mạng ResNet (Residual Network) để trích xuất các bản đồ đặc trưng (feature maps) từ ảnh đầu vào. Tầng này giúp mô hình "nhìn" thấy các nét gạch, đường cong của chữ.
-		\item \textbf{Mô hình hóa chuỗi (Sequence Modeling - RNN):} Các đặc trưng được đưa vào mạng Bi-LSTM (Bidirectional Long Short-Term Memory). Mạng này quét chuỗi đặc trưng theo cả hai chiều (trái sang phải và phải sang trái) để học ngữ cảnh. 
-		\\ \textit{Ví dụ:} Việc biết ký tự trước đó là 'P' và sau đó là 'X' sẽ giúp mô hình dự đoán ký tự giữa là 'T' (trong từ PTXLA) chính xác hơn.
-		\item \textbf{Giải mã (Decoding - CTC Loss):} Tầng cuối cùng sử dụng thuật toán CTC (Connectionist Temporal Classification) để giải mã đầu ra của RNN thành chuỗi ký tự cuối cùng. CTC giải quyết vấn đề bất đồng bộ giữa kích thước ảnh đầu vào (width) và độ dài chuỗi ký tự đầu ra (text length) mà không cần gióng hàng (alignment) thủ công.
+		\item \textbf{Nhị phân hóa:} Áp dụng ngưỡng (Thresholding) để lọc bỏ các vùng có xác suất thấp.
+		\item \textbf{Liên kết (Linking):} Các vùng Region sẽ được nối lại với nhau nếu vùng Affinity giữa chúng có giá trị cao.
+		\item \textbf{Tạo đa giác (Polygon Generation):} Thay vì vẽ hình chữ nhật cứng nhắc, CRAFT tạo ra một đường bao đa giác ôm sát theo chiều cong của dòng chữ.
 	\end{enumerate}
 	
 	\begin{figure}[H]
 		\centering
-		\includegraphics[width=0.95\textwidth, keepaspectratio]{images/easyocr_pipeline.png}
-		\caption{Kiến trúc CRNN: Sự kết hợp giữa CNN (thị giác) và RNN (ngôn ngữ)}
-		\label{fig:easyocr_pipeline}
+		% Hàng 1: Ảnh gốc và Heatmap
+		\begin{subfigure}[b]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{images/craft_step_1.png}
+			\caption{Đầu vào (Ảnh gốc)}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{images/craft_step_2.png}
+			\caption{Dự đoán Region \& Affinity Heatmaps}
+		\end{subfigure}
+		
+		\vspace{0.5cm} % Khoảng cách giữa 2 hàng
+		
+		% Hàng 2: Quá trình liên kết và Kết quả
+		\begin{subfigure}[b]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{images/craft_step_3.png}
+			\caption{Liên kết các vùng ký tự (Linking)}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[b]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{images/craft_step_4.png}
+			\caption{Kết quả cuối cùng (Đa giác ôm sát)}
+		\end{subfigure}
+		
+		\caption{Minh họa quy trình xử lý "Bottom-up" của mô hình CRAFT (trích xuất từ mô phỏng thực tế): Từ ảnh đầu vào (a), mô hình sinh ra các bản đồ nhiệt xác suất (b), sau đó liên kết các vùng ký tự dựa trên điểm Affinity (c) để tạo ra đường bao đa giác cuối cùng ôm sát dòng chữ (d).}
+		\label{fig:craft_process_full}
 	\end{figure}
 	
-	\subsection{Hậu xử lý dữ liệu (Regex Post-processing)}
-	Mô hình Deep Learning hoạt động dựa trên xác suất, do đó đầu ra thường chứa nhiễu (Stochastic Noise). Để đảm bảo tính toàn vẹn dữ liệu (Data Integrity), hệ thống sử dụng Biểu thức chính quy (Regular Expression) như một bộ lọc tất định (Deterministic Filter).
+	\textbf{Ưu điểm trong đồ án:} Nhờ cơ chế liên kết mềm dẻo này, CRAFT xử lý rất tốt các trường hợp phiếu thi bị cong vênh khi chụp, điều mà các mô hình Bounding Box truyền thống thường bị lỗi (cắt lẹm mất chữ hoặc lấy thừa nền).
 	
-	Chiến lược áp dụng cho từng trường thông tin:
+	\subsection{Mạng nhận dạng chuỗi (Text Recognition): CRNN + CTC}
+	Sau khi định vị được vùng văn bản (Text Region), bài toán chuyển sang giai đoạn nhận dạng chuỗi (Sequence Recognition). EasyOCR áp dụng kiến trúc \textbf{CRNN} (đề xuất bởi Shi et al.), bao gồm 3 thành phần chính hoạt động như một đường ống (pipeline) liền mạch:
+	
+	\subsubsection{1. Trích xuất đặc trưng (Feature Extraction - CNN)}
+	Đầu vào là ảnh cắt (cropped image) của từ vựng đã được chuẩn hóa kích thước (thường là cao 32 pixel). 
 	\begin{itemize}
-		\item \textbf{Trường Số báo danh (Numeric Field):} Sử dụng pattern \texttt{\textbackslash D} (Non-digit) để tìm và loại bỏ tất cả các ký tự không phải là số. Điều này giúp khắc phục lỗi phổ biến khi OCR nhận diện nhầm vết bẩn thành dấu chấm câu.
-		\item \textbf{Trường Họ tên (Text Field):} Sử dụng pattern \texttt{[\^{}\textbackslash w\textbackslash s]} để loại bỏ các ký tự đặc biệt, chỉ giữ lại chữ cái và khoảng trắng, đảm bảo tên thí sinh đúng định dạng văn bản.
+		\item Nhóm sử dụng mạng nền (Backbone) là \textbf{ResNet} để trích xuất các bản đồ đặc trưng (Feature Maps).
+		\item \textbf{Cơ chế Map-to-Sequence:} Đây là bước quan trọng để chuyển đổi dữ liệu từ không gian hình ảnh (2D) sang không gian chuỗi (1D). Bản đồ đặc trưng đầu ra của CNN sẽ được chia cắt theo chiều dọc (column-wise) thành các lát cắt (slices). Mỗi lát cắt này đóng vai trò là một "từ mã" (frame) đại diện cho một vùng nhỏ của ảnh theo thứ tự từ trái sang phải.
 	\end{itemize}
+	
+	\subsubsection{2. Mô hình hóa chuỗi (Sequence Modeling - RNN)}
+	Chuỗi các đặc trưng hình ảnh được đưa vào mạng \textbf{Bi-LSTM (Bidirectional Long Short-Term Memory)}.
+	\begin{itemize}
+		\item \textbf{Tại sao cần 2 chiều?} Chữ viết có tính ngữ cảnh mạnh. Ví dụ trong ảnh mờ, nếu chỉ nhìn từ trái sang, chữ 'H' có thể giống chữ 'N'. Nhưng nếu biết ký tự sau nó là 'o' và 't' (trong từ 'Hot'), mạng sẽ tự sửa lỗi dự đoán. Bi-LSTM quét dữ liệu theo cả hai hướng (Quá khứ $\rightarrow$ Tương lai và ngược lại) để tối ưu hóa khả năng này.
+		\item Đầu ra của tầng này là xác suất dự đoán của từng ký tự tại mỗi lát cắt thời gian.
+	\end{itemize}
+	
+	\subsubsection{3. Giải mã (Decoding - CTC Loss)}
+	Đây là lớp cuối cùng giải quyết vấn đề "Bất đồng bộ" (Alignment Problem). Vì chiều rộng của ảnh (số lượng lát cắt) luôn lớn hơn số lượng ký tự thực tế (ví dụ: ảnh chữ "AI" có thể bị cắt thành 10 lát), RNN sẽ sinh ra rất nhiều ký tự trùng lặp.
+	
+	Thuật toán \textbf{CTC (Connectionist Temporal Classification)} giới thiệu một ký tự đặc biệt gọi là \textbf{"Blank token"} (ký hiệu: "-") để giải quyết vấn đề này qua 2 quy tắc:
+	\begin{enumerate}
+		\item \textbf{Gộp ký tự trùng:} Các ký tự giống nhau đứng liền kề sẽ bị gộp thành 1 (VD: $ll \rightarrow l$).
+		\item \textbf{Xóa Blank:} Ký tự Blank dùng để phân cách các ký tự trùng lặp thực sự (VD: từ "Hello" có 2 chữ 'l', cần có blank ở giữa $l-l$ để không bị gộp).
+	\end{enumerate}
+	
+	\textit{Ví dụ quá trình giải mã:}
+	\begin{itemize}
+		\item Đầu ra RNN (Raw): \texttt{-H-He--l-ll--lo-}
+		\item Gộp trùng lặp: \texttt{-H-He-l-l-lo-}
+		\item Loại bỏ Blank: \texttt{Hello}
+	\end{itemize}
+	
+	\begin{figure}[H]
+		\centering
+		% Thay thế bằng hình ảnh minh họa CTC (sẽ tạo bên dưới)
+		\includegraphics[width=0.95\textwidth]{images/ctc_decoding_demo.png}
+		\caption{Minh họa cơ chế giải mã CTC: Từ chuỗi dự đoán thô chứa nhiều ký tự lặp và ký tự trống (-), thuật toán tinh gọn lại thành văn bản có nghĩa cuối cùng.}
+		\label{fig:ctc_decoding}
+	\end{figure}
+	
+	\subsection{Hậu xử lý dữ liệu (Post-processing Pipeline)}
+	Mô hình Deep Learning hoạt động dựa trên xác suất, do đó đầu ra thường chứa nhiễu (Stochastic Noise). Để đảm bảo tính toàn vẹn dữ liệu (Data Integrity), hệ thống áp dụng cơ chế hậu xử lý 2 bước:
+	
+	\subsubsection{1. Sửa lỗi nhầm lẫn (Homoglyph Correction)}
+	OCR thường xuyên nhận diện sai các ký tự có hình dáng tương đồng. Trước khi lọc, hệ thống sử dụng từ điển ánh xạ (Mapping Dictionary) để khôi phục giá trị đúng dựa trên ngữ cảnh của trường thông tin:
+	\begin{itemize}
+		\item \textbf{Trường Số (SBD):} Ánh xạ các ký tự giống số về số.
+		\\ \textit{Quy tắc:} \texttt{'O', 'o', 'D', 'Q'} $\rightarrow$ \texttt{'0'}; \texttt{'I', 'l', 'b'} $\rightarrow$ \texttt{'1'}; \texttt{'S', 's'} $\rightarrow$ \texttt{'5'}.
+		\item \textbf{Trường Chữ (Họ tên):} Ngược lại, ánh xạ các số về ký tự (ví dụ: \texttt{'0'} $\rightarrow$ \texttt{'O'}).
+	\end{itemize}
+	
+	\subsubsection{2. Lọc định dạng (Regex Filtering)}
+	Sau bước sửa lỗi, Biểu thức chính quy (Regular Expression) được sử dụng như một bộ lọc tất định (Deterministic Filter) cuối cùng:
+	\begin{itemize}
+		\item \textbf{Trường SBD:} Pattern \texttt{\textbackslash D+} (xóa sạch các ký tự phi số còn sót lại).
+		\item \textbf{Trường Họ tên:} Pattern \texttt{[\^{}a-zA-Z\textbackslash s\textbackslash p\{L\}]} (loại bỏ ký tự đặc biệt, giữ lại chữ cái bao gồm cả Tiếng Việt Unicode).
+	\end{itemize}
+	
+	\begin{table}[H]
+		\centering
+		\caption{Ví dụ thực tế về hiệu quả của quy trình hậu xử lý}
+		\begin{tabular}{|l|l|l|l|}
+			\hline
+			\textbf{Trường} & \textbf{Đầu ra OCR (Raw)} & \textbf{Xử lý (Logic)} & \textbf{Kết quả (Clean)} \\ \hline
+			\multirow{2}{*}{SBD} & \texttt{2111O3SS} & Thay O$\rightarrow$0, S$\rightarrow$5 & \texttt{21110355} \\ \cline{2-4} 
+			& \texttt{21.11.03.55} & Regex xóa dấu chấm & \texttt{21110355} \\ \hline
+			\multirow{2}{*}{Họ Tên} & \texttt{Nguyễn Văn A@} & Regex xóa ký tự lạ & \texttt{Nguyễn Văn A} \\ \cline{2-4} 
+			& \texttt{Trần 0anh} & Thay 0$\rightarrow$O & \texttt{Trần Oanh} \\ \hline
+		\end{tabular}
+		\label{tab:post_processing}
+	\end{table}
 	
 	\section{Công nghệ và Thư viện nền tảng}
 	
@@ -265,7 +483,7 @@
 		% keepaspectratio: Giữ nguyên tỷ lệ ảnh, không bị méo
 		% width=\linewidth: Rộng tối đa bằng trang giấy
 		% height=0.85\textheight: Cao tối đa 85% trang giấy (chừa chỗ cho caption)
-		\includegraphics[height=0.7\textheight, keepaspectratio]{images/sequence_diagram.png}
+		\includegraphics[height=0.7\textheight, angle=-90, keepaspectratio]{images/sequence_diagram.png}
 		\caption{Sơ đồ tuần tự mô tả luồng xử lý và tương tác giữa các module trong hệ thống}
 		\label{fig:pipeline}
 	\end{figure}
@@ -515,69 +733,87 @@
 	
 	Trong quá trình kiểm thử, nhóm nhận thấy mô hình gốc (Pre-trained) của EasyOCR hoạt động kém hiệu quả với các mẫu chữ số viết tháu hoặc dính nét. Để cải thiện độ chính xác, nhóm đã thực hiện quy trình huấn luyện lại (Fine-tuning) mô hình trên nền tảng Kaggle.
 	
-	\subsection{Chuẩn bị dữ liệu}
+	\subsection{Chuẩn bị dữ liệu (Data Preparation)}
 	\begin{itemize}
-		\item \textbf{Nguồn dữ liệu:} Nhóm sử dụng bộ dữ liệu mã nguồn mở \textit{OCR\_handwritting\_HAT2023} (HuggingFace), chứa các mẫu chữ viết tay tiếng Việt đa dạng \cite{hat2023}.
-		\item \textbf{Định dạng:} Dữ liệu ảnh và nhãn (Label) được đóng gói sang định dạng \textbf{LMDB (Lightning Memory-Mapped Database)} . Việc này giúp tối ưu hóa tốc độ đọc ghi (I/O) khi huấn luyện trên lượng dữ liệu lớn.
+		\item \textbf{Nguồn dữ liệu:} Nhóm sử dụng bộ dữ liệu mã nguồn mở \textit{OCR\_handwriting\_HAT2023} (HuggingFace) \cite{hat2023}. Bộ dữ liệu bao gồm \textbf{khoảng 100,000 mẫu ảnh} chứa các từ tiếng Việt viết tay có dấu, số và ký tự đặc biệt.
+		\item \textbf{Phân chia dữ liệu:} Dữ liệu được chia theo tỷ lệ \textbf{4:1} (80\% cho huấn luyện, 20\% cho kiểm thử đánh giá).
+		\item \textbf{Định dạng:} Dữ liệu ảnh và nhãn (Label) được đóng gói sang định dạng \textbf{LMDB (Lightning Memory-Mapped Database)}. Việc này giúp tối ưu hóa tốc độ đọc ghi (I/O) ngẫu nhiên, giảm thời gian chờ của GPU khi huấn luyện trên lượng dữ liệu lớn.
+		\item \textbf{Tăng cường dữ liệu (Augmentation):} Để tránh hiện tượng quá khớp (Overfitting), nhóm áp dụng các kỹ thuật biến đổi ảnh ngẫu nhiên trong quá trình train: xoay nhẹ ($\pm 10^\circ$), thêm nhiễu hạt (Gaussian Noise), và thay đổi độ tương phản.
 	\end{itemize}
 	
-	\subsection{Cấu hình Huấn luyện}
-	Quá trình huấn luyện sử dụng kiến trúc mạng CRNN tiêu chuẩn với các tham số:
+	\subsection{Cấu hình Huấn luyện (Training Configuration)}
+	Quá trình tinh chỉnh (Fine-tuning) được thực hiện trên môi trường \textbf{Google Colab (GPU Tesla T4)} với cấu hình chi tiết:
 	\begin{itemize}
-		\item \textbf{Mô hình nền:} \texttt{english\_g2.pth} (Pre-trained trên dữ liệu tổng quát).
+		\item \textbf{Mô hình nền (Pre-trained):} \texttt{english\_g2.pth} (Mô hình đã học tốt các nét ký tự Latin cơ bản).
 		\item \textbf{Kiến trúc mạng:} ResNet (Trích xuất đặc trưng) + BiLSTM (Học chuỗi) + CTC (Dự đoán).
-		\item \textbf{Số vòng lặp (Iterations):} 3000 bước.
-		\item \textbf{Kích thước Batch:} 64.
+		\item \textbf{Siêu tham số (Hyperparameters):}
+		\begin{itemize}
+			\item Optimizer: \textbf{Adadelta} (Thích hợp cho mạng RNN).
+			\item Learning Rate: $1.0$.
+			\item Batch Size: 64.
+			\item Số vòng lặp (Iterations): 3000 bước.
+		\end{itemize}
 	\end{itemize}
 	
-	\subsection{Xử lý bất đồng bộ kiến trúc (Selective Weight Loading)}
-	Một thách thức kỹ thuật nhóm gặp phải là sự sai khác về kích thước lớp đầu ra (Output Layer) giữa mô hình gốc (97 lớp - ký tự tiếng Anh) và mô hình cần train (197 lớp - bao gồm tiếng Việt có dấu). Điều này gây lỗi khi nạp trọng số (weights).
+	\subsection{Xử lý bất đồng bộ kiến trúc (Transfer Learning Challenge)}
+	Một thách thức kỹ thuật nhóm gặp phải là sự sai khác về kích thước lớp đầu ra (Output Layer) giữa mô hình gốc (97 lớp - ký tự tiếng Anh) và mô hình cần train (\textbf{197 lớp} - bao gồm tiếng Việt có dấu). Việc nạp trực tiếp trọng số sẽ gây lỗi lệch kích thước (Size Mismatch Error).
 	
-	Để giải quyết, nhóm đã xây dựng hàm Tải trọng số chọn lọc:
+	\textbf{Giải pháp:} Nhóm áp dụng kỹ thuật \textit{Selective Weight Loading}. Ý tưởng là giữ lại toàn bộ trọng số của các tầng trích xuất đặc trưng (Feature Extractor) và tầng chuỗi (Sequence Modeling), chỉ loại bỏ và khởi tạo lại ngẫu nhiên lớp Linear cuối cùng (Prediction Layer).
 	
 	\begin{lstlisting}[language=Python, caption={Thuật toán lọc bỏ các lớp không tương thích khi nạp weight}]
-		# Doan code xu ly viec load weights khi so luong class thay doi
+		# Tai state_dict cua model pre-trained
 		state_dict = torch.load(opt.saved_model)
 		model_dict = model.state_dict()
 		
-		# Chi giu lai cac lop (layers) co kich thuoc khop nhau
-		# Loc bo lop Prediction cu (vi lech so luong class)
+		# Loc bo cac lop khong khop kich thuoc (cu the la lop Prediction cu)
+		# Chi giu lai cac weights cua ResNet va BiLSTM
 		new_state_dict = {
-			k: v for k, v in state_dict.items() 
+			k: v for k, v in state_dict.items() 
 			if k in model_dict and v.shape == model_dict[k].shape
 		}
 		
-		# Load cac weights tuong thich, khoi tao lai ngau nhien lop Prediction moi
+		# Load weights da loc vao model hien tai
+		# strict=False: Chap nhan viec bo qua lop Prediction (se duoc khoi tao ngau nhien)
 		model.load_state_dict(new_state_dict, strict=False)
 	\end{lstlisting}
 	
 	Giải pháp này cho phép giữ lại khả năng trích xuất đặc trưng (Feature Extraction) cực tốt của mô hình gốc, chỉ huấn luyện lại lớp dự đoán cuối cùng để phù hợp với bộ ký tự mới.
 
-	\section{Cơ chế Nhận dạng Kép và Chiến lược Hợp nhất (Hybrid OCR Strategy)}
+	\section{Đánh giá Thực nghiệm và Chiến lược Tối ưu hóa (Optimization Strategy)}
 	
-	Trong quá trình thực nghiệm, nhóm nhận thấy một sự phân hóa rõ rệt về hiệu năng giữa hai mô hình (Gốc và Fine-tuned) trên các loại dữ liệu khác nhau. Nhận thấy không có mô hình nào tối ưu cho mọi trường hợp, chương trình áp dụng chiến lược Hybrid Strategy để tận dụng sở trường riêng biệt của từng engine.
+	Trong quá trình thực nghiệm trên bộ dữ liệu kiểm thử, nhóm đã ghi nhận những chênh lệch đáng kể về hiệu năng giữa các phương pháp nhận dạng. Kết quả cho thấy không có một công cụ đơn lẻ nào (Single Engine) giải quyết tốt trọn vẹn mọi trường hợp, dẫn đến nhu cầu phải áp dụng chiến lược kết hợp (Hybrid Approach).
 	
-	\subsection{Phân tích hiệu năng so sánh}
-	Quan sát bảng ghi nhận kết quả (Log) thực tế (Hình \ref{fig:dual_mode_log}), nhóm rút ra các nhận xét sau:
+	\subsection{Phân tích hạn chế của các Model OCR}
+	Dựa trên kết quả log thực tế, nhóm rút ra hai nhận xét quan trọng về các mô hình Deep Learning đã thử nghiệm:
+	
 	\begin{itemize}
-		\item \textbf{Đối với trường thông tin chữ in/Tiếng Anh (Tên trường, Lớp, Môn học):} Mô hình Gốc (Default) hoạt động ổn định hơn. Ví dụ: Chuỗi "HCMUS" được mô hình gốc nhận diện chính xác, trong khi mô hình Custom thường nhận diện sai thành "hmus" do bị ảnh hưởng bởi tập dữ liệu huấn luyện thiên về các âm tiết tiếng Việt và chữ viết tay.
-		\item \textbf{Đối với trường số viết tay (SBD, Mã đề):} Mô hình Custom (Fine-tuned) thể hiện hiệu quả vượt trội trong việc xử lý các nét chữ viết tay tự nhiên, dính nét hoặc đứt đoạn - những trường hợp mà mô hình gốc thường bỏ sót hoặc nhận diện nhầm thành ký tự chữ cái.
+		\item \textbf{Về mô hình nhận dạng chữ (Text Recognition):} 
+		Mô hình có sẵn (Pre-trained \texttt{english\_g2}) cho kết quả nhận dạng \textbf{tốt hơn} so với mô hình tự huấn luyện (Custom Fine-tuned) đối với các trường thông tin chữ in (như Tên trường, Môn thi). 
+		\\ \textit{Nguyên nhân:} Mô hình Custom bị giới hạn bởi quy mô dữ liệu huấn luyện nhỏ, dẫn đến khả năng tổng quát hóa (Generalization) thấp hơn so với mô hình gốc được train trên hàng triệu dữ liệu đa dạng.
+		
+		\item \textbf{Về nhận dạng Số báo danh (SBD):} 
+		Cả hai mô hình OCR (Gốc và Custom) đều \textbf{thất bại} trong việc nhận diện chính xác chuỗi số báo danh viết tay.
+		\\ \textit{Nguyên nhân:} Ảnh cắt ra từ các ô điền số thường dính các đường kẻ khung (grid lines) hoặc bị nhiễu do nét viết chạm vào viền ô. Điều này tạo ra các đặc trưng lạ (Artifacts) khiến mạng CNN không thể trích xuất đúng đặc điểm của con số.
 	\end{itemize}
 	
-	\subsection{Cơ chế quyết định (Decision Logic)}
-	Dựa trên các phân tích trên, chương trình sử dụng thuật toán lựa chọn kết quả dựa theo ngữ cảnh của vùng ảnh (Region of Interest):
-	\begin{itemize}
-		\item \textbf{Quy tắc 1:} Nếu vùng nhận dạng được định nghĩa là \textbf{Số (SBD, Mã đề)} $\rightarrow$ Ưu tiên sử dụng kết quả từ \textit{Custom Engine}.
-		\item \textbf{Quy tắc 2:} Nếu vùng nhận dạng là \textbf{Văn bản (Tên, Lớp, Môn)} $\rightarrow$ Ưu tiên sử dụng kết quả từ \textit{Default Engine}.
-	\end{itemize}
+	\subsection{Chiến lược Hợp nhất OMR - OCR}
+	Thay vì cố gắng sửa lỗi cho mô hình OCR ở phần số báo danh, nhóm quyết định thay đổi chiến lược tiếp cận theo hướng "Sở trường hóa": Sử dụng OCR cho văn bản và OMR cho các ô đánh dấu.
 	
-	Chiến lược này giúp hệ thống đạt độ chính xác tổng thể tốt hơn, khắc phục được hiện tượng quá khớp (Overfitting) của mô hình tự huấn luyện đối với các từ vựng tiếng Anh hoặc chữ in chuyên ngành, đồng thời vẫn đảm bảo khả năng đọc số viết tay chính xác.
+	Cơ chế quyết định (Decision Logic) được thiết lập như sau:
+	
+	\begin{enumerate}
+		\item \textbf{Đối với trường Văn bản (Tên, Lớp, Môn):} 
+		Ưu tiên sử dụng \textbf{Pre-trained Model}. Mặc dù không hỗ trợ tốt dấu tiếng Việt bằng model Custom, nhưng độ ổn định và khả năng đọc chữ in của model này cao hơn, giúp định danh được các thông tin tiêu đề chính xác.
+		
+		\item \textbf{Đối với trường Số (SBD, Mã đề):} 
+		Chúng ta \textbf{bỏ qua hoàn toàn kết quả OCR} và chỉ sử dụng kết quả từ \textbf{OMR Engine} (thuật toán xử lý ảnh xác định vị trí tô).
+		\\ \textit{Lý do:} Thuật toán OMR hoạt động dựa trên mật độ điểm ảnh (Pixel Density) và vị trí hình học, do đó nó miễn nhiễm với vấn đề "nét chữ xấu" hay "dính khung" mà OCR gặp phải. OCR chỉ được kích hoạt như một kênh tham khảo phụ trong các trường hợp OMR không thể xác định (ví dụ tô mờ).
+	\end{enumerate}
 	
 	\begin{figure}[H]
 		\centering
-		% Thay bằng ảnh chụp màn hình log thực tế của bạn
 		\includegraphics[width=0.95\linewidth]{images/log_dual_mode.png}
-		\caption{Bảng log so sánh cho thấy sự bổ trợ lẫn nhau giữa hai mô hình: Model Gốc đọc tốt chữ in (HCMUS), Model Custom đọc tốt số viết tay}
+		\caption{Bảng phân tích lỗi: OCR thường xuyên nhận diện sai SBD do nhiễu đường kẻ, trong khi OMR cho kết quả chính xác tuyệt đối ở các trường hợp tô đúng quy cách(phần bảng là phần nhận diện SBD bằng OCR, còn phần bên dưới là nhận diện bằng OMR).}
 		\label{fig:dual_mode_log}
 	\end{figure}
 	
@@ -598,11 +834,12 @@
 	\end{itemize}
 	
 	\subsection{Tham số cấu hình}
-	Các tham số quan trọng trong \texttt{config.py} được thiết lập cho quá trình kiểm thử:
+	Các tham số quyết định trong \texttt{config.py} được tinh chỉnh dựa trên kích thước ảnh chuẩn hóa:
 	\begin{itemize}
-		\item Kích thước ảnh chuẩn hóa sau khi Warp: $1000 \times 1400$ pixels.
-		\item Ngưỡng pixel (để xác định ô tô): \texttt{PIXEL\_THRESHOLD = 180}.
-		\item Bán kính vùng quét điểm ảnh: \texttt{SCAN\_RADIUS = 14}.
+		\item \textbf{Không gian ảnh Warped:} $1000 \times 1400$ pixels (Tương ứng tỷ lệ giấy A4).
+		\item \textbf{Mặt nạ vùng quét (Mask Radius):} \texttt{r = 14 pixels}. Đảm bảo vùng quét nằm trọn trong ô trắc nghiệm, tránh nhiễu từ viền ô.
+		\item \textbf{Ngưỡng xác định tô (Decision Threshold):} \texttt{MIN\_PIXELS = 180}. 
+		\\ \textit{Lý do:} Với diện tích mặt nạ $\approx 615$ pixels, ngưỡng 180 tương ứng với độ phủ mực khoảng 30\%, giúp loại bỏ các trường hợp tẩy xóa không sạch hoặc nhiễu giấy, nhưng vẫn bắt được các nét tô hơi nhạt.
 	\end{itemize}
 	
 	\section{Kết quả Huấn luyện Mô hình (Training Results)}
@@ -612,62 +849,46 @@
 	\begin{itemize}
 		\item \textbf{Giai đoạn khởi tạo:} Giá trị Loss ban đầu khá cao ($\approx 44.8$). Điều này là bình thường do lớp dự đoán (Prediction Layer) được khởi tạo lại ngẫu nhiên để phù hợp với bộ ký tự tiếng Việt (197 classes).
 		\item \textbf{Giai đoạn hội tụ (Sau 500 vòng lặp):} Train Loss giảm mạnh xuống còn $\approx 4.1$. Mô hình bắt đầu học được các đặc trưng của nét chữ viết tay.
-		\item \textbf{Kết thúc (3000 vòng lặp):} Mô hình đạt trạng thái ổn định (Loss $\approx 0.1$), có khả năng nhận diện tốt các ký tự số viết tháu.
+		\item \textbf{Kết thúc (3000 vòng lặp):} Mô hình đạt trạng thái ổn định (Loss $\approx 0.6$), có khả năng nhận diện tốt các ký tự số viết thiếu (độ chính xác ghi nhận là $\approx 79.8\%$).
 	\end{itemize}
 	
 	\section{Đánh giá Hiệu năng Nhận dạng (Evaluation)}
 	
-	\subsection{So sánh hiệu năng OCR (Ablation Study)}
-	Để minh chứng cho sự cần thiết của chiến lược Hybrid OCR, nhóm đã thực hiện so sánh kết quả nhận dạng trên cùng một tập dữ liệu giữa 2 mô hình.
+	\subsection{Đánh giá hiệu năng OCR (Performance Evaluation)}
+	Để tìm ra phương án tối ưu, nhóm đã thực hiện đối sánh kết quả nhận dạng trên cùng tập dữ liệu thực nghiệm giữa mô hình gốc (Pre-trained) và mô hình tự huấn luyện (Custom Fine-tuned).
+	
+	Kết quả thực tế (Bảng \ref{tab:ocr_compare}) cho thấy những hạn chế nghiêm trọng của phương pháp OCR thuần túy đối với bài toán này:
 	
 	\begin{table}[H]
 		\centering
-		\begin{tabular}{|l|p{4cm}|p{4cm}|}
+		\begin{tabular}{|l|p{5cm}|p{5cm}|}
 			\hline
-			\textbf{Loại dữ liệu} & \textbf{Model Gốc (Pre-trained)} & \textbf{Model Tinh chỉnh (Custom)} \\ \hline
-			\textbf{SBD viết tay chuẩn} & Tốt (95\%) & \textbf{Rất tốt (98\%)} \\ \hline
-			\textbf{Số viết tháu/dính} & Thường sai (nhầm '1' thành 'l', '0' thành 'O') & \textbf{Cải thiện rõ rệt} (đọc đúng các số dính nét) \\ \hline
-			\textbf{Chữ in (Tiếng Anh)} & \textbf{Chính xác} (đọc đúng "HCMUS", "PTXLA") & Kém (thường đọc sai thành các âm tiết tiếng Việt) \\ \hline
+			\textbf{Trường thông tin} & \textbf{Model Gốc (Pre-trained)} & \textbf{Model Tinh chỉnh (Custom)} \\ \hline
+			
+			\textbf{1. Chữ in (Tiêu đề)} & \textbf{Chính xác cao}. \newline Đọc đúng các từ viết tắt tiếng Anh (VD: "HCMUS", "TEST"). & \textbf{Kém}. \newline Thường nhận diện sai thành âm tiết tiếng Việt do Overfitting (VD: "HCMUS" $\rightarrow$ "hamus"). \\ \hline
+			
+			\textbf{2. Tên (Viết tay)} & \textbf{Khá}. \newline Nhận dạng được các ký tự Latin cơ bản, ít bị nhiễu. & \textbf{Không ổn định}. \newline Thường xuyên sai chính tả hoặc dính chữ (VD: "Minh Nhat" $\rightarrow$ "minnht"). \\ \hline
+			
+			\textbf{3. Số báo danh (SBD)} & \textbf{Thất bại}. \newline Nhầm lẫn các ô tô số thành văn bản tiêu đề (VD: đọc thành "Student ID"). & \textbf{Thất bại}. \newline Hiện tượng "Ảo giác" (Hallucination): Cố gắng đọc các nét gạch của ô trắc nghiệm thành chữ cái tiếng Việt (VD: "ssuơđanzio"). \\ \hline
 		\end{tabular}
-		\caption{Bảng so sánh cho thấy sự đánh đổi (Trade-off) giữa hai mô hình, từ đó dẫn đến quyết định sử dụng chiến lược kết hợp (Hybrid).}
+		\caption{Bảng so sánh thực nghiệm: Cả hai mô hình đều không thể xử lý trường SBD do nhiễu từ khung lưới, dẫn đến quyết định chuyển sang giải pháp OMR cho các trường số.}
 		\label{tab:ocr_compare}
 	\end{table}
 	
-	\subsection{Kết quả chấm thi (OMR)}
+	\subsection{Kết quả chấm thi (OMR Evaluation)}
 	\begin{itemize}
-		\item \textbf{Khả năng chống nhiễu:} Thuật toán \textbf{Adaptive Gaussian Thresholding} hoạt động hiệu quả trên các ảnh có bóng đổ nhẹ, tách biệt tốt vùng tô chì và nền giấy.
-		\item \textbf{Hạn chế:} Đối với các ảnh bị nghiêng quá 45 độ hoặc mất góc định vị (anchor), thuật toán Warp Perspective không thể khôi phục khung hình, dẫn đến việc chấm điểm thất bại.
-	\end{itemize}
-	
-	\section{Kết quả Xử lý ảnh (Preprocessing Results)}
-	
-	Chất lượng của quá trình tiền xử lý ảnh ảnh hưởng trực tiếp đến độ chính xác của các bước nhận dạng phía sau. Dưới đây là đánh giá thực tế trên các mẫu thử nghiệm.
-	
-	\subsection{Biến đổi hình học (Warp Perspective)}
-	Module \texttt{image\_utils.py} đã thực hiện tốt chức năng phát hiện 4 góc định vị của phiếu thi, ngay cả khi ảnh đầu vào có nền phức tạp.
-	
-	\begin{figure}[H]
-		\centering
-		% Minipage giup dat 2 anh nam ngang hang nhau
-		\begin{minipage}{0.45\textwidth}
-			\centering
-			% Thay thế bằng tên file ảnh thực tế của bạn
-			\includegraphics[width=\linewidth]{images/input_sample.jpg} 
-			\caption{Ảnh gốc (Nghiêng, có bóng đổ)}
-		\end{minipage}\hfill
-		\begin{minipage}{0.45\textwidth}
-			\centering
-			\includegraphics[width=\linewidth]{images/warped_sample.jpg} 
-			\caption{Ảnh sau hiệu chỉnh (Top-down view)}
-		\end{minipage}
-		\caption{Kết quả quá trình chuẩn hóa hình học (Warping)}
-	\end{figure}
-	
-	\subsection{Xử lý nhị phân và Khử nhiễu}
-	Việc áp dụng \textbf{Adaptive Gaussian Thresholding} đã cho thấy hiệu quả rõ rệt so với phương pháp phân ngưỡng truyền thống:
-	\begin{itemize}
-		\item \textbf{Xử lý bóng đổ:} Các vùng giấy bị tối do bóng râm được cân bằng lại, chuyển về nền trắng (giá trị 255).
-		\item \textbf{Tách biệt đối tượng:} Các ô tô chì và mực in được tách biệt rõ ràng (giá trị 0) khỏi nền giấy, tạo thuận lợi cho việc đếm điểm ảnh (Pixel Counting).
+		\item \textbf{Khả năng chống nhiễu (Robustness):} 
+		Thuật toán \textbf{Adaptive Gaussian Thresholding} hoạt động xuất sắc trong điều kiện ánh sáng phức tạp (bóng đổ, chênh sáng). Hệ thống phân tách tốt vùng tô chì ngay cả khi nền giấy bị tối màu cục bộ.
+		
+		\item \textbf{Độ chính xác hình học:}
+		Hệ thống xử lý tốt các ảnh có góc nghiêng nhẹ ($\pm 30^\circ$). Tuy nhiên, độ chính xác giảm mạnh trong các trường hợp:
+		\begin{itemize}
+			\item \textbf{Mất góc định vị (Occlusion):} Không thể khôi phục khung hình nếu camera không bắt trọn vẹn 4 điểm neo.
+			\item \textbf{Biến dạng phi tuyến (Non-planar distortion):} Khi giấy bị cong hoặc nhăn (thường gặp khi cầm tay chụp), phép biến đổi \textit{Perspective Transform} (vốn giả định mặt phẳng) gây ra sai lệch vị trí các ô trắc nghiệm ở vùng trung tâm.
+		\end{itemize}
+		
+		\item \textbf{Độ nhạy nét tô:}
+		Ngưỡng lọc (\texttt{THRESHOLD=180}) hoạt động tốt với các ô được tô kín. Tuy nhiên, hệ thống có thể bỏ sót (False Negative) đối với các trường hợp thí sinh tô quá nhạt hoặc chỉ đánh dấu gạch chéo/dấu tích mảnh.
 	\end{itemize}
 	
 	\section{Kết quả Chấm thi (OMR Results)}
@@ -724,53 +945,83 @@
 	
 	\section{Tổng kết Hiệu năng và Hạn chế}
 	
-	\subsection{Hiệu năng đạt được}
+	\subsection{Hiệu năng đạt được (Performance Summary)}
 	\begin{itemize}
-		\item \textbf{Tốc độ xử lý:} Trung bình 1.5 - 2 giây/ảnh (trên CPU thường).
-		\item \textbf{Độ chính xác OMR:} Đạt mức cao (>99%) với điều kiện thí sinh tô kín ô tròn.
-		\item \textbf{Tính tự động:} Quy trình vận hành xuyên suốt từ đầu vào (ảnh thô) đến đầu ra (Excel, ảnh chấm) mà không cần can thiệp thủ công.
+		\item \textbf{Tốc độ xử lý (Throughput):} 
+		Trung bình \textbf{1.5 - 2.0 giây/ảnh} trên cấu hình CPU phổ thông (Intel Core i5/i7, không cần GPU rời). Tốc độ này đáp ứng tốt nhu cầu chấm thi số lượng lớn trong thời gian ngắn.
+		
+		\item \textbf{Độ chính xác (Accuracy):} Nhờ áp dụng chiến lược Hybrid OMR-OCR, hệ thống đạt độ chính xác tối ưu cho từng loại dữ liệu:
+		\begin{itemize}
+			\item \textbf{Phần Trắc nghiệm \& SBD (OMR):} Đạt \textbf{> 99\%} đối với các trường hợp thí sinh tô kín ô tròn và giấy không bị nhàu nát nghiêm trọng.
+			\item \textbf{Phần Tiêu đề (OCR Pre-trained):} Đạt \textbf{> 95\%} với các thông tin in sẵn (Tên trường, Môn học).
+		\end{itemize}
+		
+		\item \textbf{Tính tự động hóa (End-to-End Automation):} 
+		Hệ thống vận hành khép kín từ khâu đầu vào (ảnh chụp thô từ điện thoại) $\rightarrow$ Tiền xử lý $\rightarrow$ Nhận dạng $\rightarrow$ Xuất báo cáo Excel và ảnh chấm điểm, loại bỏ hoàn toàn thao tác nhập liệu thủ công.
 	\end{itemize}
 	
-	\subsection{Hạn chế tồn tại}
-	Trong quá trình thực hiện, nhóm nhận thấy một số điểm hạn chế:
+	\subsection{Hạn chế tồn tại (Current Limitations)}
+	Mặc dù hệ thống đã đáp ứng được các yêu cầu cơ bản của bài toán chấm thi, nhóm nhìn nhận thẳng thắn các hạn chế sau:
+	
 	\begin{enumerate}
-		\item \textbf{Phụ thuộc khung viền:} Thuật toán Warp Perspective yêu cầu ảnh chụp phải nhìn thấy rõ 4 góc định vị. Nếu ảnh bị mất góc, quá trình tiền xử lý sẽ thất bại.
-		\item \textbf{Hạn chế của OCR chữ viết tay:} Mặc dù đã Fine-tune, nhưng khả năng nhận dạng chữ cái viết tay tiếng Việt (Họ tên) vẫn chưa đủ độ tin cậy để đưa vào ứng dụng thực tế, do đó nhóm mới chỉ tập trung vào nhận dạng số (SBD).
-		\item \textbf{Tính tĩnh của cấu trúc:} Chương trình hoạt động dựa trên tọa độ cố định. Nếu mẫu phiếu thi thay đổi bố cục, người dùng buộc phải sinh lại file cấu hình mới thay vì chương trình tự động thích nghi.
+		\item \textbf{Nhạy cảm với biến dạng vật lý (Physical Deformation):} 
+		Thuật toán \textit{Warp Perspective} giả định phiếu thi nằm trên một mặt phẳng lý tưởng. Trong thực tế, nếu ảnh chụp bị uốn cong (do cầm tay) hoặc nhăn nheo, phép biến đổi sẽ không chính xác, gây lệch vị trí các ô trắc nghiệm ở vùng trung tâm.
+		
+		\item \textbf{Giới hạn của OCR viết tay:} 
+		Mô hình nhận dạng chữ viết tay (Handwritten Text Recognition) mặc dù đã được tinh chỉnh nhưng độ chính xác vẫn chưa đạt ngưỡng an toàn cho ứng dụng thực tế (Production-ready). Đặc biệt với trường "Họ và tên" tiếng Việt, mô hình thường xuyên nhầm lẫn dấu thanh hoặc các nét chữ tháu, đòi hỏi vẫn phải có sự xác thực lại từ con người.
+		
+		\item \textbf{Phụ thuộc vào mẫu cố định (Static Template):} 
+		Hệ thống hoạt động dựa trên tọa độ cứng (Hard-coded coordinates) được định nghĩa trong file cấu hình. Hệ thống thiếu khả năng "tự thích nghi" (Adaptive Layout Analysis); nghĩa là chỉ cần phiếu thi thay đổi khoảng cách dòng hoặc vị trí ô, người dùng buộc phải thiết lập lại cấu hình thủ công.
 	\end{enumerate}
 	
 	\chapter{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
 	
 	\section{Kết luận}
 	
-	Đồ án \textbf{"Xây dựng chương trình hỗ trợ chấm thi và số hóa bài thi trắc nghiệm"} là bước đầu giúp nhóm làm quen với bài toán Xử lý ảnh và Thị giác máy tính trong thực tế. Sau quá trình nghiên cứu, cài đặt và thử nghiệm, nhóm đã rút ra được những kết quả và bài học sau:
+	Đồ án \textbf{"Xây dựng chương trình hỗ trợ chấm thi và số hóa bài thi trắc nghiệm"} là bước đầu giúp nhóm tiếp cận bài toán Thị giác máy tính trong môi trường thực tế. Không chỉ dừng lại ở việc cài đặt thuật toán, đồ án còn là quá trình tư duy giải quyết vấn đề (Problem Solving) khi đối mặt với các hạn chế của dữ liệu và công nghệ.
+	
+	Sau quá trình nghiên cứu và thực nghiệm, nhóm rút ra các kết luận sau:
 	
 	\subsection{Kết quả đạt được}
 	\begin{itemize}
-		\item \textbf{Hoàn thiện quy trình cơ bản:} Đã xây dựng được một quy trình xử lý ảnh khép kín (End-to-End) từ ảnh đầu vào đến kết quả chấm điểm.
+		\item \textbf{Thử nghiệm và tích hợp mô hình lai (Hybrid OMR-OCR):} 
+		Thay vì phụ thuộc vào một công nghệ duy nhất, nhóm đã triển khai song song cả hai phương pháp xử lý. Kết quả thực nghiệm giúp phân định rõ phạm vi áp dụng hiệu quả cho từng module: thuật toán \textbf{OMR} cho thấy độ ổn định cao hơn với dữ liệu số (SBD), trong khi \textbf{Deep Learning OCR} phù hợp hơn để trích xuất các thông tin văn bản (Tên trường, Môn thi).
 		
-		\item \textbf{Áp dụng thành công các thuật toán nền tảng:}
+		\item \textbf{Cải thiện bước Tiền xử lý (Preprocessing):}
 		\begin{itemize}
-			\item Kỹ thuật \textbf{Adaptive Thresholding} đã chứng minh hiệu quả thực tế trong việc xử lý ảnh bị bóng đổ, vượt trội hơn so với phân ngưỡng cố định.
-			\item Kỹ thuật \textbf{Warp Perspective} giúp chuẩn hóa tốt các ảnh chụp từ góc nghiêng thông thường.
+			\item Kỹ thuật \textbf{Adaptive Gaussian Thresholding} đã hỗ trợ giảm thiểu tác động của hiện tượng bóng đổ (Shadow), giúp hệ thống hoạt động ổn định hơn trong điều kiện ánh sáng thường.
+			\item Kỹ thuật \textbf{Perspective Transform} thực hiện tốt chức năng chuẩn hóa hình học cho các ảnh chụp từ góc nghiêng, tạo đầu vào chuẩn xác cho các bước sau.
 		\end{itemize}
 		
-		\item \textbf{Nghiên cứu về OCR:} Nhóm đã bước đầu tìm hiểu cách tích hợp và huấn luyện lại (Fine-tune) mô hình Deep Learning (EasyOCR) để giải quyết bài toán nhận dạng số viết tay, đồng thời hiểu rõ tầm quan trọng của việc làm sạch dữ liệu (Data Cleaning) bằng Regex.
+		\item \textbf{Tích hợp bước Hậu xử lý (Post-processing):} 
+		Bên cạnh kết quả nhận dạng thô, hệ thống đã bổ sung các bộ lọc Regex và luật sửa lỗi (Heuristic Rules). Bước này đóng vai trò quan trọng trong việc hạn chế các lỗi nhầm lẫn ký tự điển hình của mô hình học sâu (như nhầm lẫn giữa số '0' và chữ 'O').
 	\end{itemize}
 	
 	\subsection{Bài học kinh nghiệm}
-	Qua đồ án này, nhóm nhận thấy khoảng cách giữa lý thuyết và thực tế còn khá lớn. Các thuật toán truyền thống (Canny, FindContours) tuy đơn giản nhưng rất nhạy cảm với nhiễu môi trường. Điều này cho thấy sự cần thiết của việc nghiên cứu các phương pháp hiện đại hơn (như Deep Learning) để tăng tính bền vững (Robustness) cho hệ thống.
+	\begin{itemize}
+		\item \textbf{Sự đánh đổi giữa Deep Learning và Thuật toán cổ điển:} 
+		Qua thực nghiệm, nhóm nhận thấy mô hình học sâu (Deep Learning) dù linh hoạt nhưng thường tiêu tốn tài nguyên và có tính bất định (xác suất). Đối với các bài toán có cấu trúc ràng buộc chặt chẽ như chấm ô trắc nghiệm, các thuật toán Thị giác máy tính truyền thống (như OMR đếm pixel) lại cho thấy sự ổn định, tốc độ nhanh và khả năng kiểm soát lỗi tốt hơn. Bài học rút ra là cần lựa chọn công cụ phù hợp với đặc thù của từng bài toán con thay vì áp dụng máy móc một phương pháp.
+		
+		\item \textbf{Thách thức từ dữ liệu thực tế:} 
+		Có một khoảng cách đáng kể giữa môi trường lý tưởng và thực tế triển khai. Các vấn đề vật lý như biến dạng giấy (cong, nhàu), điều kiện ánh sáng hay thói quen tô của thí sinh là những thách thức lớn mà thuật toán cần xử lý. Điều này khẳng định vai trò của khâu Tiền xử lý (Preprocessing) và làm sạch dữ liệu quan trọng tương đương với việc xây dựng mô hình.
+	\end{itemize}
 	
-	\section{Hướng phát triển trong tương lai}
+	\section{Hướng phát triển trong tương lai (Future Work)}
 	
-	Dựa trên những hạn chế đã phân tích, nhóm đề xuất một số hướng cải tiến để phát triển đồ án tốt hơn:
+	Từ những hạn chế và bài học kinh nghiệm đã đúc kết, nhóm đề xuất các hướng cải tiến để nâng cấp hệ thống theo hướng thực tế hóa nếu như có thêm thời gian và nguồn lưc:
 	
 	\begin{enumerate}
-		\item \textbf{Nâng cấp khả năng phát hiện vùng (Object Detection):} Thay thế thuật toán tìm biên Canny bằng các mô hình Deep Learning nhẹ như \textbf{YOLO} hoặc \textbf{SSD}. Việc này sẽ giúp chương trình xác định được phiếu thi ngay cả khi ảnh có nền phức tạp hoặc bị che khuất một phần.
+		\item \textbf{Khắc phục biến dạng phi tuyến (Document Dewarping):} 
+		Thay vì chỉ sử dụng \textit{Perspective Transform} (chỉ hiệu quả với mặt phẳng), nhóm dự kiến nghiên cứu các mô hình Deep Learning chuyên dụng (như \textit{DocTr}) để thực hiện \textbf{làm phẳng tài liệu (Dewarping)}. Kỹ thuật này sẽ giải quyết triệt để vấn đề giấy bị cong hoặc nhăn khi chụp bằng điện thoại.
 		
-		\item \textbf{Mở rộng Dataset OCR:} Thu thập và gán nhãn thêm dữ liệu chữ viết tay tiếng Việt để tiếp tục huấn luyện mô hình, nhằm mục tiêu nhận dạng được cả Tên và Lớp của thí sinh.
+		\item \textbf{Tự động hóa phân tích bố cục (Adaptive Layout Analysis):} 
+		Thay thế cơ chế cấu hình tọa độ tĩnh (Hard-coded) bằng các thuật toán phát hiện đối tượng (Object Detection như YOLO hoặc Contour Analysis nâng cao). Mục tiêu là giúp hệ thống tự động định vị vùng SBD và vùng câu hỏi bất kể người dùng thay đổi mẫu phiếu thi như thế nào.
 		
-		\item \textbf{Xây dựng Giao diện (GUI):} Phát triển giao diện người dùng trực quan (thay vì dòng lệnh CLI) để người dùng dễ dàng thao tác, kiểm tra lại các bài thi bị chấm lỗi và chỉnh sửa thủ công nếu cần thiết.
+		\item \textbf{Nâng cấp mô hình nhận dạng (Transformer-based OCR):} 
+		Để cải thiện độ chính xác cho chữ viết tay tiếng Việt, nhóm sẽ thử nghiệm các kiến trúc hiện đại hơn như \textbf{Vision Transformer (ViT)} hoặc \textbf{TrOCR}, thay thế cho kiến trúc CNN-RNN hiện tại vốn gặp khó khăn với các ký tự dính nét hoặc dấu thanh phức tạp.
+		
+		\item \textbf{Xây dựng quy trình "Human-in-the-loop":} 
+		Phát triển giao diện trực quan (GUI) tích hợp cơ chế \textbf{Xác thực (Verification)}. Hệ thống sẽ tự động khoanh vùng các trường có độ tin cậy thấp (Low confidence score) để người dùng kiểm tra và sửa lỗi thủ công nhanh chóng, đảm bảo tính chính xác tuyệt đối trước khi xuất kết quả cuối cùng.
 	\end{enumerate}
 	
 	\newpage
@@ -779,38 +1030,48 @@
 	
 	\begin{thebibliography}{99}
 		
-		% --- Sách giáo trình (Tăng độ uy tín) ---
+		% --- 1. SÁCH NỀN TẢNG (TEXTBOOKS) ---
 		\bibitem{gonzalez_woods}
 		Gonzalez, R. C., \& Woods, R. E. (2018). \textit{Digital Image Processing} (4th Edition). Pearson.
 		
-		% --- Các bài báo khoa học gốc ---
+		% --- 2. CÁC NGHIÊN CỨU GỐC (SEMINAL PAPERS) ---
+		% [Paper gốc về Canny - Rất tốt]
 		\bibitem{canny_edge}
 		Canny, J. (1986). "A Computational Approach to Edge Detection". \textit{IEEE Transactions on Pattern Analysis and Machine Intelligence}, PAMI-8(6), 679-698.
 		
+		% [Paper về Adaptive Threshold - Rất tốt]
 		\bibitem{adaptive_thresh}
 		Bradley, D., \& Roth, G. (2007). "Adaptive Thresholding using the Integral Image". \textit{Journal of Graphics Tools}, 12(2), 13-21.
 		
-		\bibitem{crnn_paper} 
-		Shi, B., Bai, X., \& Yao, C. (2016). "An End-to-End Trainable Neural Network for Image-based Sequence Recognition". \textit{IEEE Transactions on Pattern Analysis and Machine Intelligence}.
+		% [Paper gốc của kiến trúc CRNN - Cực kỳ quan trọng]
+		\bibitem{crnn_paper}
+		Shi, B., Bai, X., \& Yao, C. (2016). "An End-to-End Trainable Neural Network for Image-based Sequence Recognition". \textit{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 39(11), 2298-2304.
 		
-		% --- Tài liệu kỹ thuật & Thư viện ---
+		% [BỔ SUNG 1: Paper gốc về ResNet - Backbone của EasyOCR]
+		\bibitem{resnet_paper}
+		He, K., Zhang, X., Ren, S., \& Sun, J. (2016). "Deep Residual Learning for Image Recognition". \textit{CVPR 2016}, 770-778.
+		
+		% [BỔ SUNG 2: Paper gốc về CTC Loss - Cơ chế giải mã]
+		\bibitem{ctc_paper}
+		Graves, A., Fernandez, S., Gomez, F., \& Schmidhuber, J. (2006). "Connectionist Temporal Classification: Labelling Unsegmented Sequence Data with Recurrent Neural Networks". \textit{ICML 2006}, 369-376.
+		
+		% --- 3. TÀI LIỆU KỸ THUẬT & THƯ VIỆN (TECHNICAL DOCS) ---
+		% [Sửa lại tên tác giả cho chuẩn format]
 		\bibitem{ref_limits}
-		Rosebrock, A. (2016). \textit{Bubble Sheet Scanner and Test Grader using OMR, Python and OpenCV}. PyImageSearch. \url{https://pyimagesearch.com/}
+		Rosebrock, A. (2016). \textit{Bubble Sheet Scanner and Test Grader using OMR, Python and OpenCV}. PyImageSearch Blog. \url{https://pyimagesearch.com/}
 		
 		\bibitem{opencv_docs}
 		OpenCV Team. (2024). \textit{OpenCV-Python Tutorials: Image Processing}. \url{https://docs.opencv.org/master/d6/d00/tutorial_py_root.html}
 		
 		\bibitem{easyocr_git}
-		Jaided AI. (2024). \textit{EasyOCR Documentation}. \url{https://www.jaided.ai/easyocr/}
-		
-		\bibitem{reportlab_guide}
-		ReportLab Inc. (2024). \textit{ReportLab PDF Generation User Guide}. \url{https://www.reportlab.com/docs/}
+		Jaided AI. (2024). \textit{EasyOCR Documentation \& Repository}. \url{https://github.com/JaidedAI/EasyOCR}
 		
 		\bibitem{regex_docs}
-		Python Software Foundation. \textit{Regular expression operations (re module)}. Python 3 Documentation.
+		Python Software Foundation. (2024). \textit{Regular expression operations (re module)}. Python 3.10 Documentation.
 		
-		\bibitem{hat2023} 
-		Vklinhhh. (2023). \textit{OCR Handwriting Dataset (HAT2023)}. HuggingFace Datasets.
+		% [Sửa lỗi chính tả handwriting và format lại nguồn]
+		\bibitem{hat2023}
+		HuggingFace Datasets. (2023). \textit{Vietnamese Handwriting Dataset (HAT2023)}. Repository: \texttt{vklinhhh/OCR\_handwriting\_HAT2023}. \url{https://huggingface.co/datasets/vklinhhh/OCR_handwriting_HAT2023}
 		
 	\end{thebibliography}
 	

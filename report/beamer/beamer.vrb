@@ -1,0 +1,46 @@
+\frametitle{Cài đặt và Hiện thực - Logic Chấm thi (OMR)}
+
+	\begin{columns}
+		\begin{column}{0.6\textwidth}
+			\begin{exampleblock}{3. Giải thuật OMR (Core Logic)}
+				Đoạn code Python xử lý đếm điểm ảnh (Pixel Counting):
+				
+				% Bây giờ ta có thể dùng font \footnotesize hoặc \small thay vì \tiny
+				% Code sẽ to và dễ đọc hơn hẳn
+			\begin{lstlisting}[language=Python, basicstyle=\ttfamily\footnotesize, keywordstyle=\color{blue}]
+# 1. Adaptive Thresholding (Loc nhieu bong do)
+thresh = cv2.adaptiveThreshold(gray, 255,
+cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+cv2.THRESH_BINARY_INV, 51, 10)
+
+# 2. Tao Mask va Dem Pixel sang
+mask = np.zeros(thresh.shape, dtype="uint8")
+cv2.drawContours(mask, [cnt], -1, 255, -1)
+mask = cv2.bitwise_and(thresh, thresh, mask=mask)
+total = cv2.countNonZero(mask) # Dem so pixel trang
+
+# 3. Quy tac quyet dinh (Decision Rule)
+if total > 180:
+# Xac nhan thi sinh da to dap an nay
+bubbled = True
+				\end{lstlisting}
+			\end{exampleblock}
+		\end{column}
+		
+		\begin{column}{0.38\textwidth}
+			\begin{alertblock}{Phân tích ngưỡng (Threshold)}
+				Tại sao lại chọn con số \textbf{Total > 180}?
+				\vspace{0.5em}
+				\begin{itemize}
+					\item Qua thực nghiệm, một ô tô kín tiêu chuẩn có khoảng \textbf{500-600} pixel trắng.
+					\item Vết tẩy xóa hoặc nhiễu giấy thường < 100 pixel.
+					\item $\Rightarrow$ Ngưỡng \textbf{180} (khoảng 30\% diện tích) là điểm cân bằng ("Sweet spot") để:
+					\begin{itemize} \footnotesize
+						\item Bắt được nét tô nhạt.
+						\item Loại bỏ được vết tẩy xóa.
+					\end{itemize}
+				\end{itemize}
+			\end{alertblock}
+		\end{column}
+	\end{columns}
+	

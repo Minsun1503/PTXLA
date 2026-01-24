@@ -1,0 +1,516 @@
+\documentclass[10pt, aspectratio=169]{beamer} 
+% aspectratio=169: Chuyển sang tỷ lệ màn hình rộng 16:9 (Chuẩn hiện đại), giúp có nhiều không gian ngang hơn, đỡ bị tràn dòng.
+
+% --- CẤU HÌNH GIAO DIỆN (THEME) ---
+\usetheme{Madrid}      
+\usecolortheme{default}
+
+% --- GÓI HỖ TRỢ TIẾNG VIỆT & HÌNH ẢNH ---
+\usepackage[utf8]{inputenc}
+\usepackage[vietnamese]{babel}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{booktabs} 
+\usepackage{amsmath} % Để gõ công thức toán đẹp
+
+% --- THÔNG TIN BÀI BÁO CÁO (METADATA) ---
+\title[SmartGrader]{CHƯƠNG TRÌNH HỖ TRỢ CHẤM THI \\ VÀ SỐ HÓA BÀI THI TRẮC NGHIỆM}
+\subtitle{Báo cáo Đồ án cuối kì môn: Phân tích Xử lý ảnh}
+
+\author[Nhóm 10]{GVHD: Huỳnh Thanh Sơn \\ SVTH: Nguyễn Thế Minh Nhật - Nhóm 10}
+
+\institute[HCMUS]{Trường Đại học Khoa học Tự nhiên, ĐHQG-HCM}
+
+\date{} 
+
+% --- BẮT ĐẦU SLIDE ---
+\begin{document}
+	
+	% SLIDE 1: TRANG BÌA
+	\begin{frame}
+		\titlepage
+	\end{frame}
+	
+	% SLIDE 2: NỘI DUNG BÁO CÁO (MỤC LỤC)
+	\begin{frame}{Nội dung báo cáo}
+		\begin{enumerate}
+			\setlength\itemsep{0.8em} % Giảm khoảng cách một chút để vừa vặn hơn
+			\item \textbf{Tổng quan đề tài}
+			\item \textbf{Cơ sở lý thuyết và Công nghệ sử dụng}
+			\item \textbf{Phân tích và Thiết kế hệ thống}
+			\item \textbf{Cài đặt và Hiện thực}
+			\item \textbf{Kết quả thực nghiệm}
+			\item \textbf{Kết luận và Hướng phát triển}
+		\end{enumerate}
+	\end{frame}
+	
+	% SLIDE 3: TỔNG QUAN ĐỀ TÀI
+	\begin{frame}{Tổng quan đề tài}
+		\small 
+		
+		\begin{columns}[t] 
+			% Cột 1: Đặt vấn đề
+			\column{0.48\textwidth}
+			\begin{block}{Đặt vấn đề và Thách thức}
+				Bài toán chấm thi trên Mobile gặp nhiều khó khăn so với máy quét chuyên dụng:
+				\begin{itemize}
+					\item \textbf{Môi trường:} Ánh sáng không đều, bóng đổ (Shadows) gây nhiễu nặng.
+					\item \textbf{Biến dạng:} Ảnh chụp thường bị nghiêng, méo phối cảnh (Perspective distortion).
+					\item \textbf{Số hóa:} Cần tích hợp OCR để đọc SBD viết tay bên cạnh chấm trắc nghiệm OMR.
+				\end{itemize}
+			\end{block}
+			
+			% Cột 2: Mục tiêu (ĐÃ GỘP VÀO CÙNG 1 SLIDE)
+			\column{0.48\textwidth}
+			\begin{block}{Mục tiêu và Phạm vi}
+				\begin{itemize}
+					\item \textbf{Mục tiêu:} Thử nghiệm hiệu quả các giải thuật (Adaptive Threshold, EasyOCR) trên dữ liệu thực tế.
+					\item \textbf{Chức năng chính:}
+					\begin{itemize}
+						\item Auto Generator: Sinh phiếu thi bằng \textit{ReportLab}.
+						\item Pipeline khép kín: Tiền xử lý $\to$ OMR $\to$ OCR $\to$ Excel.
+					\end{itemize}
+					\item \textbf{Công nghệ:} Python, OpenCV, EasyOCR.
+				\end{itemize}
+			\end{block}
+		\end{columns}
+	\end{frame}
+	
+	% SLIDE 4: CƠ SỞ LÝ THUYẾT - XỬ LÝ ẢNH
+	% Cập nhật: Thêm Canny và Hình minh họa so sánh bóng đổ
+	\begin{frame}{Cơ sở lý thuyết: Xử lý ảnh số (Digital Image Processing)}
+		\small
+		
+		\begin{block}{1. Các kỹ thuật Tiền xử lý (Preprocessing)}
+			\begin{itemize}
+				\item \textbf{Grayscale \& Gaussian Blur:} Chuyển xám và làm trơn để loại bỏ nhiễu hạt tần số cao.
+				\item \textbf{Canny Edge Detection:} Phát hiện cạnh để tìm đường bao (contour) của phiếu thi.
+				\item \textbf{Perspective Transform:} Dùng ma trận \textit{Homography} để nắn ảnh nghiêng thành ảnh phẳng (Top-down view).
+			\end{itemize}
+		\end{block}
+		
+		\vspace{0.2cm} 
+		
+		\begin{alertblock}{2. Giải thuật quan trọng: Adaptive Thresholding}
+			\begin{columns}[c] 
+				% CỘT TRÁI: LÝ THUYẾT
+				\column{0.55\textwidth}
+				\begin{itemize}
+					\item \textbf{Vấn đề:} Phân ngưỡng toàn cục (Global) thất bại với ảnh bị bóng đổ (Shadows).
+					\item \textbf{Giải pháp:} Tính ngưỡng động $T(x,y)$ với \textit{Block size=51, C=10}:
+					\begin{equation*}
+						T(x,y) = \mu_{local}(x,y) - C
+					\end{equation*}
+				\end{itemize}
+				
+				% CỘT PHẢI: HÌNH ẢNH MINH HỌA
+				\column{0.42\textwidth}
+				\centering
+				\begin{figure}
+					% Ảnh minh họa bóng đổ được nhắc đến trong nguồn (Trang 28)
+					\includegraphics[width=\linewidth, height=2.5cm, keepaspectratio]{images/shadow_comparison_result.jpg}
+					\caption{\scriptsize Ảnh gốc(bên phải),Dùng Thresold thông thường (ở giữa, )Adaptive Threshold xử lý tốt vùng bóng râm(bên trái)}
+				\end{figure}
+			\end{columns}
+		\end{alertblock}
+	\end{frame}
+	
+	% --- SLIDE 5: CƠ SỞ LÝ THUYẾT (PHẦN 1) ---
+	% Slide này tập trung vào chữ, nên bỏ columns để tận dụng toàn bộ chiều rộng
+	\begin{frame}{Cơ sở lý thuyết: Deep Learning OCR (EasyOCR)}
+		\small
+		
+		\begin{block}{1. Kiến trúc End-to-End}
+			Hệ thống sử dụng pipeline 2 giai đoạn:
+			\begin{itemize}
+				\setlength\itemsep{0.8em} % Tăng khoảng cách dòng cho dễ đọc
+				
+				\item \textbf{Detection (CRAFT):} Tiếp cận "Bottom-up".
+				\begin{itemize} \footnotesize
+					\item Dự đoán \textit{Heatmap} xác suất từng ký tự thay vì dự đoán khung bao ngay lập tức.
+					\item $\to$ Xử lý tốt văn bản cong/biến dạng [1].
+				\end{itemize}
+				
+				\item \textbf{Recognition (CRNN):} Pipeline 3 bước:
+				\begin{itemize} \footnotesize
+					\item \textit{CNN (ResNet):} Trích xuất đặc trưng ảnh.
+					\item \textit{RNN (Bi-LSTM):} Học ngữ cảnh chuỗi 2 chiều [2].
+					\item \textit{CTC Loss:} Giải mã chuỗi, xử lý lỗi lặp ký tự (VD: "ll" $\to$ "l") [3].
+				\end{itemize}
+			\end{itemize}
+		\end{block}
+	\end{frame}	
+	
+	% --- SLIDE 6: CƠ SỞ LÝ THUYẾT (PHẦN 2) ---
+	% Slide này chia 2 cột: Bên trái là Hậu xử lý, Bên phải là Ảnh minh họa
+	\begin{frame}{Cơ sở lý thuyết: Deep Learning OCR (EasyOCR)}
+		
+		\begin{columns}[c] % [c] để canh giữa nội dung theo chiều dọc
+			
+			% CỘT TRÁI: HẬU XỬ LÝ
+			\begin{column}{0.48\textwidth}
+				\begin{block}{2. Hậu xử lý (Post-processing)}
+					\small
+					Khắc phục sai số xác suất của mô hình:
+					\begin{itemize}
+						\setlength\itemsep{0.5em}
+						\item \textbf{Homoglyph Correction:} 
+						\\ Ánh xạ các ký tự dễ nhầm lẫn về chuẩn (VD: 'l', 'I' $\to$ '1' cho SBD) [4].
+						\item \textbf{Regex Filtering:} 
+						\\ Dùng mẫu \texttt{\textbackslash D+} để xóa sạch các ký tự chữ cái lẫn trong trường số [5].
+					\end{itemize}
+				\end{block}
+			\end{column}
+			
+			% CỘT PHẢI: HÌNH ẢNH MINH HỌA
+			\begin{column}{0.48\textwidth}
+				\centering
+				
+				% Hình 1: CRAFT Heatmap
+				\begin{figure}
+					\includegraphics[width=0.9\linewidth, height=2.5cm, keepaspectratio]{images/craft_step_2.png}
+					\caption{\scriptsize Heatmap dự đoán vị trí ký tự (CRAFT)}
+				\end{figure}
+				
+				\vspace{-0.2cm} 
+				
+				% Hình 2: CTC Decoding
+				\begin{figure}
+					\includegraphics[width=0.9\linewidth, height=2.5cm, keepaspectratio]{images/ctc_decoding_demo.png}
+					\caption{\scriptsize Giải mã CTC xử lý lặp ký tự}
+				\end{figure}
+			\end{column}
+			
+		\end{columns}	
+	\end{frame}
+	
+	% --- SLIDE 7: PHÂN TÍCH VÀ THIẾT KẾ (PHẦN 1 - KIẾN TRÚC) ---
+	% Slide này tập trung giải thích cách tổ chức code và dữ liệu
+	\begin{frame}{Phân tích và Thiết kế hệ thống - Kiến trúc}
+		
+		\begin{block}{1. Kiến trúc Module hóa (Layered Architecture)}
+			Hệ thống chia tách rõ ràng các tầng xử lý để dễ bảo trì và mở rộng:
+			\begin{itemize}
+				\setlength\itemsep{0.5em} % Tăng khoảng cách dòng
+				\item \textbf{Controller:} \texttt{main.py} - Đóng vai trò điều phối luồng dữ liệu trung tâm.
+				\item \textbf{Processing Layer (Core):} 
+				\begin{itemize}
+					\item \textit{OMR Engine:} Chấm điểm trắc nghiệm (Logic đếm pixel).
+					\item \textit{OCR Engine:} Nhận dạng chữ viết tay (Deep Learning).
+				\end{itemize}
+				\item \textbf{Presentation Layer:} \texttt{renderer.py} - Trực quan hóa kết quả (Vẽ vòng tròn đúng/sai lên ảnh).
+			\end{itemize}
+		\end{block}
+		
+		\begin{alertblock}{2. Thiết kế Hướng dữ liệu (Data-Driven)}
+			\begin{itemize}
+				\item \textbf{Vấn đề:} Mẫu phiếu thi có thể thay đổi kích thước hoặc vị trí ô.
+				\item \textbf{Giải pháp:} Tọa độ vùng nhận dạng (ROI) được lưu trong file cấu hình \texttt{coordinates.json} thay vì code cứng (hard-code).
+				\item $\rightarrow$ Linh hoạt thay đổi mẫu phiếu mà không cần biên dịch lại code nguồn.
+			\end{itemize}
+		\end{alertblock}
+		
+	\end{frame}
+	
+	% --- SLIDE 8: PHÂN TÍCH VÀ THIẾT KẾ (PHẦN 2 - LUỒNG XỬ LÝ) ---
+	\begin{frame}{Phân tích và Thiết kế hệ thống - Luồng xử lý}
+		
+		\begin{figure}
+			\centering
+			
+			% Mẹo: Thêm vspace âm để kéo ảnh lên sát tiêu đề, tiết kiệm chỗ trống bên trên
+			\vspace{-0.3cm} 
+			
+			% QUAN TRỌNG: Giảm height xuống 0.7 (70%) thôi vì màn hình 16:9 chiều dọc rất thấp
+			% keepaspectratio giúp ảnh không bị méo dù ta set cả width và height
+			\includegraphics[width=\textwidth, height=0.7\textheight, keepaspectratio]{images/sequence_diagram.png}
+			
+			% Giảm khoảng cách giữa ảnh và caption
+			\vspace{-0.2cm}
+			\caption{Sơ đồ tuần tự (Sequence Diagram) mô tả luồng dữ liệu khép kín}
+		\end{figure}
+		
+	\end{frame}
+	
+% --- SLIDE 9: CÀI ĐẶT (PHẦN 1 - CÔNG CỤ & MODEL) ---
+% Slide này tập trung vào các thành phần bổ trợ và chuẩn bị model
+\begin{frame}{Cài đặt và Hiện thực - Công cụ và Mô hình}
+	
+	\begin{columns}[t]
+		% CỘT TRÁI: SINH PHIẾU
+		\begin{column}{0.48\textwidth}
+			\begin{block}{1. Module Sinh phiếu (Auto Generator)}
+				Thay vì thiết kế thủ công bằng Word/Photoshop, nhóm sử dụng thư viện \textbf{ReportLab}:
+				\begin{itemize}
+					\setlength\itemsep{0.5em}
+					\item \textbf{Cơ chế:} Vẽ vector PDF dựa trên tọa độ lập trình.
+					\item \textbf{Lợi ích:} 
+					\begin{itemize} \footnotesize
+						\item Đảm bảo tọa độ ô tròn (bubbles) chính xác tuyệt đối.
+						\item Tạo ra bộ dữ liệu chuẩn (Ground Truth) để kiểm thử độ chính xác của thuật toán chấm.
+					\end{itemize}
+				\end{itemize}
+			\end{block}
+		\end{column}
+		
+		% CỘT PHẢI: FINE-TUNING
+		\begin{column}{0.48\textwidth}
+			\begin{block}{2. Tinh chỉnh OCR (Fine-tuning)}
+				Chiến lược huấn luyện lại mô hình EasyOCR với dữ liệu Việt hóa:
+				\begin{itemize}
+					\setlength\itemsep{0.5em}
+					\item \textbf{Dataset:} Bộ \textit{HAT2023} ($\approx$ 100k mẫu chữ viết tay Tiếng Việt).
+					\item \textbf{Kỹ thuật Transfer Learning:}
+					\begin{itemize} \footnotesize
+						\item \textit{Frozen Layers:} Giữ nguyên trọng số phần trích xuất đặc trưng (ResNet + BiLSTM) để tận dụng khả năng nhìn ảnh tốt sẵn có.
+						\item \textit{Trainable Layers:} Chỉ khởi tạo và train lại lớp Fully Connected cuối cùng (Map sang 197 ký tự tiếng Việt).
+					\end{itemize}
+				\end{itemize}
+			\end{block}
+		\end{column}
+	\end{columns}
+	
+\end{frame}
+
+% --- SLIDE 10: CÀI ĐẶT (PHẦN 2 - CODE LOGIC) ---
+% Slide này dành trọn không gian để show Code Python to, rõ ràng
+\begin{frame}[fragile]{Cài đặt và Hiện thực - Logic Chấm thi (OMR)}
+	
+	\begin{columns}
+		\begin{column}{0.6\textwidth}
+			\begin{exampleblock}{3. Giải thuật OMR (Core Logic)}
+				Đoạn code Python xử lý đếm điểm ảnh (Pixel Counting):
+				
+				% Bây giờ ta có thể dùng font \footnotesize hoặc \small thay vì \tiny
+				% Code sẽ to và dễ đọc hơn hẳn
+			\begin{lstlisting}[language=Python, basicstyle=\ttfamily\footnotesize, keywordstyle=\color{blue}]
+# 1. Adaptive Thresholding (Loc nhieu bong do)
+thresh = cv2.adaptiveThreshold(gray, 255, 
+cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+cv2.THRESH_BINARY_INV, 51, 10)
+
+# 2. Tao Mask va Dem Pixel sang
+mask = np.zeros(thresh.shape, dtype="uint8")
+cv2.drawContours(mask, [cnt], -1, 255, -1)
+mask = cv2.bitwise_and(thresh, thresh, mask=mask)
+total = cv2.countNonZero(mask) # Dem so pixel trang
+
+# 3. Quy tac quyet dinh (Decision Rule)
+if total > 180:
+# Xac nhan thi sinh da to dap an nay
+bubbled = True
+				\end{lstlisting}
+			\end{exampleblock}
+		\end{column}
+		
+		\begin{column}{0.38\textwidth}
+			\begin{alertblock}{Phân tích ngưỡng (Threshold)}
+				Tại sao lại chọn con số \textbf{Total > 180}?
+				\vspace{0.5em}
+				\begin{itemize}
+					\item Qua thực nghiệm, một ô tô kín tiêu chuẩn có khoảng \textbf{500-600} pixel trắng.
+					\item Vết tẩy xóa hoặc nhiễu giấy thường < 100 pixel.
+					\item $\Rightarrow$ Ngưỡng \textbf{180} (khoảng 30\% diện tích) là điểm cân bằng ("Sweet spot") để:
+					\begin{itemize} \footnotesize
+						\item Bắt được nét tô nhạt.
+						\item Loại bỏ được vết tẩy xóa.
+					\end{itemize}
+				\end{itemize}
+			\end{alertblock}
+		\end{column}
+	\end{columns}
+	
+\end{frame}
+
+% --- SLIDE 11: CHIẾN LƯỢC HYBRID - PHẦN 1: LÝ THUYẾT ---
+% Slide này giải thích lý do tại sao phải dùng Hybrid (Vấn đề & Giải pháp)
+\begin{frame}{Chiến lược Hợp nhất OMR - OCR - Vấn đề \& Giải pháp}
+	
+	\begin{alertblock}{1. Thách thức nhận dạng (Vấn đề)}
+		\footnotesize
+		Tại sao không dùng Deep Learning (OCR) cho tất cả?
+		\begin{itemize}
+			\setlength\itemsep{0.5em}
+			\item \textbf{Nhiễu cấu trúc (Structural Noise):} 
+			\\ Các dòng kẻ ô (grid lines) của phiếu trắc nghiệm làm model OCR dễ bị "ảo giác" (hallucination) - nhìn dòng kẻ ra chữ cái.
+			\item \textbf{Nhầm lẫn ký tự (Character Confusion):} 
+			\\ OCR thường đọc nhầm nét gạch dọc `|` thành số `1` hoặc ô vuông `[]` thành chữ `O` $\to$ Sai lệch SBD nghiêm trọng.
+		\end{itemize}
+	\end{alertblock}
+	\begin{block}{2. Giải pháp phân loại xử lý (Proposed Approach)}
+		\footnotesize
+		Tách biệt luồng xử lý để tận dụng ưu điểm từng thuật toán:
+		\begin{itemize}
+			\setlength\itemsep{0.6em}
+			\item \textbf{OMR (Pixel Counting):} 
+			\\ Áp dụng cho dữ liệu \textit{Cấu trúc} (SBD, Mã đề).
+			\\ $\to$ \textbf{Mục tiêu:} Đạt độ ổn định cao, kiểm soát lỗi tốt hơn so với mô hình học sâu.
+			
+			\item \textbf{OCR (EasyOCR):} 
+			\\ Áp dụng cho dữ liệu \textit{Phi cấu trúc} (Họ tên, Lớp).
+			\\ $\to$ \textbf{Mục tiêu:} Nhận dạng văn bản tự do (chấp nhận mức sai số nhỏ về chính tả).
+		\end{itemize}
+	\end{block}
+	
+\end{frame}
+
+% --- SLIDE 12: CHIẾN LƯỢC HYBRID - PHẦN 2: HÌNH ẢNH ---
+% Slide này dành riêng để show sơ đồ to nhất có thể
+\begin{frame}{Chiến lược Hợp nhất OMR - OCR - Log Chi tiết}
+	
+	\begin{figure}
+		\centering
+		% Mẹo: Kéo ảnh lên cao một chút để tận dụng khoảng trắng thừa của tiêu đề
+		\vspace{-0.3cm}
+		
+		% Chỉnh height lên 0.75 (75% chiều cao slide) để ảnh to rõ từng chi tiết
+		\includegraphics[width=\linewidth, height=0.75\textheight, keepaspectratio]{images/log_dual_mode.png}
+		
+		\vspace{-0.2cm}
+		\caption{Log luồng xử lý song song (Dual Mode Processing)}
+	\end{figure}
+	
+\end{frame}
+
+% --- SLIDE 13: KẾT QUẢ THỰC NGHIỆM (PHẦN 1 - SỐ LIỆU) ---
+% Slide này tập trung vào các con số thống kê (Quantitative Evaluation)
+\begin{frame}{Kết quả thực nghiệm - Đánh giá định lượng}
+	
+	\begin{columns}[t]
+		% CỘT TRÁI: KẾT QUẢ TRAIN MODEL
+		\begin{column}{0.48\textwidth}
+			\begin{block}{1. Kết quả Huấn luyện (Fine-tuning OCR)}
+				Quá trình huấn luyện lại mô hình EasyOCR trên tập dữ liệu HAT2023:
+				\begin{itemize}
+					\setlength\itemsep{0.5em}
+					\item \textbf{Hội tụ:} Hàm mất mát (Loss) giảm mạnh từ $44.8 \to 0.6$ sau 3000 vòng lặp.
+					\item \textbf{Nhận xét:} Mô hình học tốt các nét chữ viết tay rời rạc, nhưng vẫn gặp khó khăn ("ảo giác") khi chữ bị dính vào đường kẻ bảng.
+				\end{itemize}
+			\end{block}
+		\end{column}
+		
+		% CỘT PHẢI: HIỆU NĂNG TOÀN HỆ THỐNG
+		\begin{column}{0.48\textwidth}
+			\begin{alertblock}{2. Hiệu năng hệ thống (Performance)}
+				Đo đạc trên máy tính cá nhân (CPU Intel Core i5, không GPU rời):
+				\begin{itemize}
+					\setlength\itemsep{0.5em}
+					\item \textbf{Tốc độ xử lý:} 
+					\\ $1.5 - 2.0$ giây/ảnh $\to$ Đủ nhanh cho nhu cầu thực tế.
+					\item \textbf{Độ chính xác:}
+					\begin{itemize} \footnotesize
+						\item \textit{OMR (Trắc nghiệm):} \textbf{$>99\%$} (với điều kiện tô kín, không tẩy xóa lem nhem).
+						\item \textit{OCR (Chữ in):} \textbf{$>95\%$} (Tên trường, Môn học).
+					\end{itemize}
+				\end{itemize}
+			\end{alertblock}
+		\end{column}
+	\end{columns}
+	
+\end{frame}
+
+% --- SLIDE 14: KẾT QUẢ THỰC NGHIỆM (PHẦN 2 - KẾT QUẢ CHẤM) ---
+% Slide này show ảnh kết quả thực tế để chứng minh hệ thống chạy đúng
+\begin{frame}{Kết quả thực nghiệm - Kết quả chấm thực tế}
+	
+	\begin{columns}[c]
+		% CỘT TRÁI: KHẲNG ĐỊNH CHIẾN LƯỢC
+		\begin{column}{0.45\textwidth}
+			\begin{block}{3. Đánh giá chiến lược Hybrid}
+				Tại sao bắt buộc phải dùng OMR cho số báo danh?
+				\begin{itemize}
+					\setlength\itemsep{0.5em}
+					\item \textbf{Thực tế:} OCR thường xuyên nhận diện sai các nét gạch ô thành ký tự (Ví dụ: ô vuông $\to$ chữ 'o', gạch đứng $\to$ số '1').
+					\item \textbf{Giải pháp:} Cơ chế rẽ nhánh (Hybrid) đã loại bỏ hoàn toàn sai số này bằng cách chuyển sang đếm pixel (OMR).
+				\end{itemize}
+			\end{block}
+		\end{column}
+		
+		% CỘT PHẢI: ẢNH MINH HỌA
+		\begin{column}{0.53\textwidth}
+			\centering
+			\begin{figure}
+				% Tăng kích thước ảnh lên tối đa để hội đồng nhìn rõ các vòng tròn chấm điểm
+				\includegraphics[width=\linewidth, height=0.7\textheight, keepaspectratio]{images/scoring_result.png}
+				\caption{Kết quả chấm thi: Vòng tròn xanh (Đúng) / Đỏ (Sai)}
+			\end{figure}
+		\end{column}
+	\end{columns}
+	
+\end{frame}
+
+% --- SLIDE 15: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN ---
+% Slide tổng kết: Một bên nhìn lại quá khứ (Kết luận), một bên nhìn về tương lai (Hướng phát triển)
+\begin{frame}{Kết luận và Hướng phát triển}
+	
+	\begin{columns}[t] % [t]: Canh lề trên để 2 khối ngang hàng nhau ngay từ dòng đầu
+		
+		% --- CỘT TRÁI: KẾT LUẬN (QUÁ KHỨ) ---
+		\begin{column}{0.48\textwidth}
+			\begin{block}{1. Kết luận và Bài học}
+				\small
+				\begin{itemize}
+					\setlength\itemsep{0.6em}
+					\item \textbf{Hiệu quả của Mô hình lai (Hybrid):}
+					\begin{itemize} \footnotesize
+						\item \textit{OMR (Cổ điển):} Đảm bảo sự ổn định cho dữ liệu cấu trúc (SBD).
+						\item \textit{OCR (Deep Learning):} Đem lại sự linh hoạt cho văn bản.
+					\end{itemize}
+					
+					\item \textbf{Bài học cốt lõi:} 
+					\\ \textit{"Deep Learning không phải chìa khóa vạn năng."} 
+					\\ $\to$ Với bài toán ràng buộc chặt chẽ, thuật toán đếm pixel truyền thống hiệu quả và kiểm soát lỗi tốt hơn.
+				\end{itemize}
+			\end{block}
+		\end{column}
+		
+		% --- CỘT PHẢI: HƯỚNG PHÁT TRIỂN (TƯƠNG LAI) ---
+		\begin{column}{0.48\textwidth}
+			\begin{alertblock}{2. Đề xuất cải tiến (Future Work)}
+				\small
+				Khắc phục hạn chế vật lý và tăng tính mềm dẻo:
+				\begin{enumerate}
+					\setlength\itemsep{0.6em}
+					\item \textbf{Dewarping (Làm phẳng):} 
+					\\ Ứng dụng model \textit{DocTr} để "uốn" phẳng ảnh giấy cong, thay thế Homography 2D.
+					
+					\item \textbf{Adaptive Layout:} 
+					\\ Dùng \textit{YOLO} để tự động tìm vùng SBD $\to$ Bỏ việc cài cứng tọa độ (Hard-coding).
+					
+					\item \textbf{Transformer OCR:} 
+					\\ Thử nghiệm \textit{ViT/TrOCR} để tăng độ chính xác với chữ viết tay tiếng Việt.
+				\end{enumerate}
+			\end{alertblock}
+		\end{column}
+		
+	\end{columns}
+	
+\end{frame}
+
+% SLIDE 16 LỜI CẢM ƠN VÀ Q&A
+% Kết thúc bài thuyết trình
+\begin{frame}[c] % [c] để căn giữa nội dung theo chiều dọc
+	\centering
+	
+	% --- PHẦN 1: LỜI CẢM ƠN ---
+	% Dùng font cực lớn và màu chủ đạo
+	{\Huge \textcolor{blue}{\textbf{CẢM ƠN QUÝ THẦY CÔ}}} \\[0.2em]
+	{\Huge \textcolor{blue}{\textbf{VÀ CÁC BẠN ĐÃ LẮNG NGHE!}}}
+	
+	\vspace{1cm}
+	
+	\vspace{1.2cm}
+	
+	% --- PHẦN 3: THÔNG TIN SINH VIÊN (FOOTER) ---
+	% Dùng bảng (tabular) để căn lề: Nhãn bên phải, Thông tin bên trái -> Rất thẳng hàng
+	\footnotesize
+	\begin{tabular}{r l}
+		\textbf{Sinh viên thực hiện:} & \textbf{Nguyễn Thế Minh Nhật} \\
+		\textbf{MSSV:} & 21110355 \\
+		\textbf{Nhóm:} & Nhóm 10 \\
+		\textbf{Đề tài:} & Nhận dạng và chấm điểm thi trắc nghiệm
+	\end{tabular}
+	
+\end{frame}
+	
+\end{document}
